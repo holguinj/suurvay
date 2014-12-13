@@ -4,9 +4,9 @@
   should be provided either through your shell or using the
   lein-environ plugin."
   (:require [clojure.string :as s] 
-            [suurvay.schema :refer [Identifier Hashtag UserMap]]
+            [suurvay.schema :refer [Identifier Hashtag UserMap Status]]
             [schema.core :as sc]
-            [twitter-schemas.keywordized :as tsc :refer [User Status]]
+;            [twitter-schemas.keywordized :as tsc :refer [User Status]]
             [twitter.oauth :refer [make-oauth-creds]]
             [twitter.api.restful :as t]))
 
@@ -16,10 +16,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pure functions
 
-(defn num-string?
+(sc/defn num-string? :- sc/Bool
   "Returns true if the given string (or whatever) is numeric."
-  [x]
-  (and (string? x) (re-find #"^\d+$" x)))
+  [x :- sc/Any]
+  (boolean (and (string? x) (re-find #"^\d+$" x))))
 
 (sc/defn identifier->map :- UserMap
   "If x is a number or appears to be a stringified user ID, return
@@ -72,7 +72,7 @@
 (sc/defn retweet-statuses
   "Given a collection of tweets from the Twitter API, return a
   sequence of retweet bodies."
-  [tweets :- [tsc/Status]]
+  [tweets :- [Status]]
   (->> tweets
     (filter :retweeted)
     (map :retweeted_status)))
@@ -80,29 +80,29 @@
 (sc/defn retweeted-users
   "Given a collection of tweets (with deets) from the Twitter API,
   return a set of users who were retweeted."
-  [tweets :- [tsc/Status]]
+  [tweets :- [Status]]
   (->> tweets
     retweet-statuses
     (map #(get-in % [:user :id]))
     set))
 
-(defn endorsed?
+(sc/defn endorsed?
   "Returns true if the given tweet is either not a retweet, or a
   retweet that was also favorited."
-  [tweet]
+  [tweet :- Status]
   (or (not (:retweeted tweet))
       (:favorited tweet)))
 
-(defn timeline-endorsed-hashtags
-  [tweets]
+(sc/defn timeline-endorsed-hashtags :- [Hashtag]
+  [tweets :- [Status]]
   (->> tweets
     (filter endorsed?)
     timeline-hashtags))
 
-(defn faved-retweeted-users
+(sc/defn faved-retweeted-users :- #{Identifier}
   "Similar to retweeted-users, but returns only users whose tweets
   were favorited+retweeted."
-  [tweets]
+  [tweets :- [Status]]
   (->> tweets
     retweet-statuses
     (filter :favorited)

@@ -1,6 +1,7 @@
 (ns suurvay.schema
   (:require [schema.core :as sc]
-            [twitter-schemas.core :as tsc]))
+;            [twitter-schemas.core :as tsc]
+            ))
 
 (def NumStr
   (sc/both sc/Str
@@ -19,6 +20,18 @@
              {:screen-name sc/Str}))
 
 (def Hashtag
-  (sc/both sc/Str
-           (sc/pred (partial re-find #"#\w+$") "hashtag")))
+  (sc/pred (partial re-find #"#\w+$") "hashtag"))
 
+(def ShortStatus
+  {:text sc/Str})
+
+(def Status
+  {:retweeted sc/Bool
+   :favorited sc/Bool
+   :retweeted_status ShortStatus})
+
+(def User
+  {:id sc/Int
+   :screen-name sc/Str
+   :profile sc/Str
+   :name sc/Str})

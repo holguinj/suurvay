@@ -8,7 +8,8 @@
                                           faved-retweeted-users
                                           timeline-endorsed-hashtags]]
             [clojure.string :as s]
-            [twitter-schemas.core :as tsc]
+            [suurvay.schema :refer [Identifier UserMap Hashtag Status User]]
+            [schema.core :as sc]
             [twitter.oauth :refer [make-oauth-creds]]
             [twitter.api.restful :as t]))
 
@@ -20,10 +21,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pure functions
 
-(defn rate-limit?
+(sc/defn rate-limit? :- sc/Bool
   "Returns true if the given exception was caused by hitting Twitter's
   API rate limit."
-  [e]
+  [e :- Exception]
   (->> (str e)
     (re-find #"Rate limit exceeded")
     boolean))
@@ -51,7 +52,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions that depend on the Twitter API
 
-(defn msec-until-reset
+(sc/defn msec-until-reset :- sc/Num
   []
   (let [now (/ (System/currentTimeMillis) 1000)
         reset (-> (t/application-rate-limit-status :oauth-creds *creds*)
@@ -60,9 +61,9 @@
         diff-sec (- reset now)]
     (* 1000 diff-sec)))
 
-(defn get-followers
+(sc/defn get-followers :- [Identifier]
   "Return a vector of follower IDs for the given user."
-  [identifier]
+  [identifier :- Identifier]
   (let [user (identifier->map identifier)]
     (try-with-limit
      (-> (t/followers-ids :oauth-creds *creds* :params user)
@@ -74,23 +75,23 @@
   [identifier & {:as params}]
   (let [user (->> identifier identifier->map (merge params))]
     (try-with-limit
-     (-> (apply t/friends-ids :oauth-creds *creds* :params user args)
+     (-> (apply t/friends-ids :oauth-creds *creds* :params user)
        :body
        :ids))))
 
-(defn ids->names
+(sc/defn ids->names :- [sc/Str]
   "Given a collection of Twitter IDs, return a new collection of
   screen-names for those users."
-  [ids & args]
+  [ids :- [Identifier]]
   (let [users (s/join "," ids)
         params {:user-id users, :include-entities false}]
     (try-with-limit
-     (->> (apply t/users-lookup :oauth-creds *creds* :params params args)
+     (->> (apply t/users-lookup :oauth-creds *creds* :params params)
        :body
        (map :name)))))
 
-(defn names->ids
-  [names]
+(sc/defn names->ids :- [Identifier]
+  [names :- [sc/Str]]
   (let [users (s/join "," names)
         params {:screen-name users, :include-entities false}]
     (try-with-limit
@@ -98,46 +99,46 @@
        :body
        (map :id)))))
 
-(defn get-tweets-details
+(sc/defn get-tweets-details :- [Status]
   "Returns a sequence of the last 200 tweet objects for the given user."
-  [identifier & args]
+  [identifier :- Identifier]
   (let [user (identifier->map identifier)
         params (merge user
                       {:include-rts true
                        :count 200
                        :trim-user true})]
     (try-with-limit
-     (->> (apply t/statuses-user-timeline :oauth-creds *creds* :params params args)
+     (->> (t/statuses-user-timeline :oauth-creds *creds* :params params)
        :body))))
 
-(defn get-tweets
+(sc/defn get-tweets :- [Status]
   "Return a sequence of tweet bodies for the given user. Removes
   retweets."
-  [identifier & args]
+  [identifier :- Identifier]
   (try-with-limit
-   (->> (apply get-tweets-details identifier args)
+   (->> (get-tweets-details identifier)
      (filter (complement :retweeted))
      (map :text))))
 
-(defn get-user-hashtags
+(sc/defn get-user-hashtags :- [Hashtag]
   "Returns the set of hashtags recently used by the given user."
-  [identifier & args]
-  (let [tweets (apply get-tweets identifier args)]
+  [identifier :- Identifier]
+  (let [tweets (get-tweets identifier)]
     (->> tweets
-      (pmapcat get-hashtags)
+      (mapcat get-hashtags)
       (map s/lower-case)
       (into #{}))))
 
-(defn get-users-hashtags
+(sc/defn get-users-hashtags :- [Hashtag]
   "Given a collection of user IDs or names, return a sorted map from tag
   frequency to tags."
-  [identifiers]
+  [identifiers :- [Identifier]]
   (->> identifiers
     (mapcat get-user-hashtags)
     frequencies
     invert-frequencies))
 
-(defn get-user
+(sc/defn get-user :- User
   "Returns a complete user object for the given user."
   [identifier]
   (let [user (identifier->map identifier)
@@ -146,21 +147,21 @@
      (-> (t/users-show :oauth-creds *creds* :params params)
        (get :body)))))
 
-(defn get-profile
-  [identifier]
+(sc/defn get-profile :- User
+  [identifier :- Identifier]
   (if (or (:profile identifier) (:name identifier))
     identifier 
     (-> identifier
       get-user)))
 
-(defn get-profile-hashtags
-  [identifier]
+(sc/defn get-profile-hashtags :- [Hashtag]
+  [identifier :- Identifier]
   (-> identifier
     get-profile
     get-hashtags))
 
-(defn get-name
-  [identifier]
+(sc/defn get-name :- sc/Str
+  [identifier :- Identifier]
   (if-let [screen-name (:screen-name identifier)]
     screen-name
     (cond
@@ -170,9 +171,9 @@
      :else
      (-> identifier get-user :screen_name))))
 
-(defn get-blocks
+(sc/defn get-blocks :- #{Identifier}
   ([] (get-blocks nil))
-  ([identifier]
+  ([identifier :- Identifier]
    (let [base-params {}
          params (if identifier
                   (merge base-params (identifier->map identifier))
@@ -184,16 +185,16 @@
         :ids
         set)))))
 
-(defn block!
-  [identifier]
+(sc/defn block! :- sc/Bool
+  [identifier :- Identifier]
   (let [user (identifier->map identifier)
         params (assoc user :include-entities false, :skip-status true)]
     (try-with-limit
      (t/blocks-create :oauth-creds *creds* :params params)
      true)))
 
-(defn unblock!
-  [identifier]
+(sc/defn unblock! :- sc/Bool
+  [identifier :- Identifier]
   (let [user (identifier->map identifier)
         params (assoc user :include-entities false, :skip-status true)]
     (try-with-limit
