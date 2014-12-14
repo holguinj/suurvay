@@ -63,7 +63,7 @@
 
 (sc/defn get-followers :- [Identifier]
   "Return a vector of follower IDs for the given user."
-  [identifier :- Identifier]
+  [identifier :- (sc/either Identifier Status User)]
   (let [user (identifier->map identifier)]
     (try-with-limit
      (-> (t/followers-ids :oauth-creds *creds* :params user)
@@ -101,7 +101,7 @@
 
 (sc/defn get-timeline-details :- [Status]
   "Returns a sequence of the last 200 tweet objects for the given user."
-  [identifier :- Identifier]
+  [identifier :- (sc/either Identifier User Status)]
   (let [user (identifier->map identifier)
         params (merge user
                       {:include-rts true
@@ -148,11 +148,13 @@
        (get :body)))))
 
 (sc/defn get-profile :- User
-  [identifier :- Identifier]
-  (if (or (:profile identifier) (:name identifier))
-    identifier 
-    (-> identifier
-      get-user)))
+  [identifier :- (sc/either Identifier User Status)]
+  (cond
+    (or (:profile identifier) (:screen_name identifier)) identifier 
+
+    (get-in identifier [:user :screen_name]) (:user identifier)
+
+    :else (get-user identifier)))
 
 (sc/defn get-profile-hashtags :- #{Hashtag}
   [identifier :- Identifier]
@@ -162,15 +164,15 @@
     get-hashtags))
 
 (sc/defn get-name :- sc/Str
-  [identifier :- Identifier]
-  (if-let [screen-name (:screen-name identifier)]
-    screen-name
+  [identifier :- (sc/either Identifier Status)]
+  (if-let [real-name (get-in identifier [:user :name])]
+    real-name
     (cond
      (and (string? identifier) (not (num-string? identifier)))
-     identifier
+     (-> identifier get-user :name)
 
      :else
-     (-> identifier get-user :screen_name))))
+     (-> identifier get-user :name))))
 
 (sc/defn get-blocks :- #{Identifier}
   ([] (get-blocks nil))

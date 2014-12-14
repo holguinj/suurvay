@@ -2,7 +2,8 @@
   "This namespace contains functions that evaluate an unknown user and
   attempt to determine group membership."
   (:require [clojure.set :as set]
-            [suurvay.twitter :as t]))
+            [suurvay.twitter :as t]
+            [suurvay.schema :refer [Status User]]))
 
 (def test-order
   "The first element in each vector is a key to lookup in the tests
@@ -12,7 +13,7 @@
   For example, [:profile t/get-profile] will eventually expand to
   something like: `((:profile tests-map) (t/get-profile subject))`."
   [[:before      identity] ;; kind of a hack to check whitelists
-   [:screen-name t/get-name]
+   [:real-name   t/get-name]
    [:profile     t/get-profile]
    [:timeline    t/get-tweets-details]
    [:friends     t/get-following]
@@ -20,18 +21,18 @@
 
 (defn test-runner
   "Takes a tests map of the following form:
-    {:limit       constant
-     :before      (tweet        -> score)
-     :screen-name (screen-name  -> score)
-     :profile     (profile      -> score)
-     :timeline    (timeline     -> score)
-     :friends     (friends      -> score)
-     :followers   (followers    -> score)}
+    {:limit       Number
+     :before      (Status        -> score)
+     :real-name   (RealName      -> score)
+     :profile     (Profile       -> score)
+     :timeline    ([Status]      -> score)
+     :friends     (FriendsList   -> score)
+     :followers   (FollowersList -> score)}
 
   and applies the given functions in this order to the relevant data
-  from Twitter. If the score ever meets or surpasses the limit, the
-  score will be returned immediately, otherwise all tests will
-  complete and then the score is returned.
+  from Twitter. If the cumulative score ever meets or surpasses the
+  limit, the score will be returned immediately, otherwise all tests
+  are evaluated and then the score is returned.
 
   Note that tests CAN return negative numbers. If the cumulative score
   is ever negative then the tests will terminate immediately and the

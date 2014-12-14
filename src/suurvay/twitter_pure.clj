@@ -4,9 +4,8 @@
   should be provided either through your shell or using the
   lein-environ plugin."
   (:require [clojure.string :as s] 
-            [suurvay.schema :refer [Identifier Hashtag UserMap Status]]
+            [suurvay.schema :refer [Identifier Hashtag UserMap Status User]]
             [schema.core :as sc]
-;            [twitter-schemas.keywordized :as tsc :refer [User Status]]
             [twitter.oauth :refer [make-oauth-creds]]
             [twitter.api.restful :as t]))
 
@@ -22,17 +21,22 @@
   (boolean (and (string? x) (re-find #"^\d+$" x))))
 
 (sc/defn identifier->map :- UserMap
+  ;; TODO: rename this to ->auth or something
   "If x is a number or appears to be a stringified user ID, return
   {:user-id x}, otherwise return {:screen-name x}."
-  [x :- Identifier]
-  (if-let [id (:id x)]
-    {:user-id id}
-    (cond
-     (or (number? x) (num-string? x))
-     {:user-id x}
+  [x :- (sc/either Identifier User Status)]
+  (cond
+    (get-in x [:user :id])
+    {:user-id (get-in x [:user :id])}
 
-     (string? x)
-     {:screen-name x})))
+    (or (number? x) (num-string? x))
+    {:user-id x}
+
+    (string? x)
+    {:screen-name x}
+        
+    (:id x)
+    {:user-id (:id x)}))
 
 (sc/defn get-hashtags :- #{Hashtag}
   "Given a string, return a set of all hashtags (including the #

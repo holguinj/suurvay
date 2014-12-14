@@ -25,6 +25,7 @@
 
 (def Status
   {:retweeted sc/Bool
+   :text sc/Str
    :favorited sc/Bool
    (sc/optional-key :retweeted_status) ShortStatus
    sc/Keyword sc/Any})
