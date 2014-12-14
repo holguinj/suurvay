@@ -6,17 +6,17 @@
             [suurvay.schema :refer [Status User]]))
 
 (def test-order
-  "The first element in each vector is a key to lookup in the tests
-  map, while the second element is a function that will provide the
+  "The first element in each vector is a key to look up in the tests
+  map. The second element is a function that will provide the
   raw data used to call the corresponding function in the tests map.
 
   For example, [:profile t/get-profile] will eventually expand to
   something like: `((:profile tests-map) (t/get-profile subject))`."
-  [[:before      identity] ;; kind of a hack to check whitelists
+  [[:before      identity] ;; check whitelists, debug, etc.
    [:real-name   t/get-name]
    [:profile     t/get-profile]
-   [:timeline    t/get-tweets-details]
-   [:friends     t/get-following]
+   [:timeline    t/get-timeline-details]
+   [:friends     t/get-friends]
    [:followers   t/get-followers]])
 
 (defn test-runner
@@ -24,14 +24,14 @@
     {:limit       Number
      :before      (Status        -> score)
      :real-name   (RealName      -> score)
-     :profile     (Profile       -> score)
+     :profile     (User          -> score)
      :timeline    ([Status]      -> score)
      :friends     (FriendsList   -> score)
      :followers   (FollowersList -> score)}
 
   and applies the given functions in this order to the relevant data
   from Twitter. If the cumulative score ever meets or surpasses the
-  limit, the score will be returned immediately, otherwise all tests
+  limit, the score will be returned immediately. Otherwise all tests
   are evaluated and then the score is returned.
 
   Note that tests CAN return negative numbers. If the cumulative score
