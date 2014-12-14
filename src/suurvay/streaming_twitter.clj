@@ -1,7 +1,10 @@
 (ns suurvay.streaming-twitter
-  "This namespace handles Twitter's streaming API. It's main purpose
+  "This namespace handles Twitter's streaming API. Its main purpose
   is to make a long-lived request to the statuses/filter endpoint."
   (:require [clojure.core.async :refer [chan <! <!! >! >!! go close!]]
+            [clojure.walk :refer [keywordize-keys]]
+            [schema.core :as sc]
+            [suurvay.schema :refer [Status]]
             [clojure.string :as s]
             [butterfly.twitter :as butterfly] 
             [suurvay.async :as async :refer [while-let]]))
@@ -28,6 +31,12 @@
               name profile user-creation-date
               verified followers-count))))
 
+(sc/defn keywordize-tweet :- Status
+  [status]
+  (let [{:strs [id text]} status]
+    (when (and id text)
+      (keywordize-keys status))))
+
 (defmacro cond>!
   [port val]
   `(go
@@ -38,6 +47,7 @@
 ;; Auth
 (defn bf-creds
   [& creds-list]
+  {:pre [(= 4 (count creds-list))]}
   (zipmap [:consumer-key :consumer-secret :access-token :access-secret] creds-list))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -54,7 +64,7 @@
      :access-secret   \"access-secret-string\"}"
   [creds ch terms]
   (let [search-str (s/join "," terms)
-        chandler (comp #(cond>! ch %) tweet->rec)]
+        chandler (comp #(cond>! ch %) keywordize-tweet)]
     (butterfly/start-streaming search-str
                                chandler
                                creds)))

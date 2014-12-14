@@ -3,7 +3,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macro
-
 (defmacro while-let
   "bindings => binding-form test
   When test is true, evaluates body with binding-form bound to the
@@ -19,7 +18,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Channel generator
-
 (defn callback-chan
   "Returns a channel that calls `f` on every item put to the channel.
   Takes an optional argument `delay` which is a sleep time in msec to
