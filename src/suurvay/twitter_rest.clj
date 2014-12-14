@@ -16,7 +16,7 @@
 ;; TODO: Reuse the same map intended for streaming
 (def make-ouauth-creds #'make-oauth-creds)
 
-(def *creds* nil)
+(def ^:dynamic *creds* nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pure functions
@@ -70,12 +70,12 @@
        :body
        :ids))))
 
-(defn get-following
+(defn get-friends
   "Return a vector of IDs for users that the given user is following."
   [identifier & {:as params}]
   (let [user (->> identifier identifier->map (merge params))]
     (try-with-limit
-     (-> (apply t/friends-ids :oauth-creds *creds* :params user)
+     (-> (t/friends-ids :oauth-creds *creds* :params user)
        :body
        :ids))))
 
@@ -86,7 +86,7 @@
   (let [users (s/join "," ids)
         params {:user-id users, :include-entities false}]
     (try-with-limit
-     (->> (apply t/users-lookup :oauth-creds *creds* :params params)
+     (->> (t/users-lookup :oauth-creds *creds* :params params)
        :body
        (map :name)))))
 
@@ -99,7 +99,7 @@
        :body
        (map :id)))))
 
-(sc/defn get-tweets-details :- [Status]
+(sc/defn get-timeline-details :- [Status]
   "Returns a sequence of the last 200 tweet objects for the given user."
   [identifier :- Identifier]
   (let [user (identifier->map identifier)
@@ -111,25 +111,25 @@
      (->> (t/statuses-user-timeline :oauth-creds *creds* :params params)
        :body))))
 
-(sc/defn get-tweets :- [Status]
+(sc/defn get-timeline :- [sc/Str]
   "Return a sequence of tweet bodies for the given user. Removes
   retweets."
   [identifier :- Identifier]
   (try-with-limit
-   (->> (get-tweets-details identifier)
+   (->> (get-timeline-details identifier)
      (filter (complement :retweeted))
      (map :text))))
 
-(sc/defn get-user-hashtags :- [Hashtag]
+(sc/defn get-user-hashtags :- #{Hashtag}
   "Returns the set of hashtags recently used by the given user."
   [identifier :- Identifier]
-  (let [tweets (get-tweets identifier)]
+  (let [tweets (get-timeline identifier)]
     (->> tweets
       (mapcat get-hashtags)
       (map s/lower-case)
       (into #{}))))
 
-(sc/defn get-users-hashtags :- [Hashtag]
+(sc/defn get-users-hashtags :- {sc/Int [Hashtag]}
   "Given a collection of user IDs or names, return a sorted map from tag
   frequency to tags."
   [identifiers :- [Identifier]]
@@ -154,10 +154,11 @@
     (-> identifier
       get-user)))
 
-(sc/defn get-profile-hashtags :- [Hashtag]
+(sc/defn get-profile-hashtags :- #{Hashtag}
   [identifier :- Identifier]
   (-> identifier
     get-profile
+    :description
     get-hashtags))
 
 (sc/defn get-name :- sc/Str

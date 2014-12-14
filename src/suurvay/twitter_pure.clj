@@ -34,7 +34,7 @@
      (string? x)
      {:screen-name x})))
 
-(sc/defn get-hashtags :- [Hashtag]
+(sc/defn get-hashtags :- #{Hashtag}
   "Given a string, return a set of all hashtags (including the #
   symbol) present in the string."
   [text]
@@ -43,7 +43,7 @@
     (map s/lower-case)
     set))
 
-(sc/defn timeline-hashtags :- [Hashtag]
+(sc/defn timeline-hashtags :- #{Hashtag}
   [tweets :- [Status]]
   (->> tweets
     (mapcat (comp get-hashtags :text))
@@ -77,7 +77,7 @@
     (filter :retweeted)
     (map :retweeted_status)))
 
-(sc/defn retweeted-users
+(sc/defn retweeted-users :- #{Identifier}
   "Given a collection of tweets (with deets) from the Twitter API,
   return a set of users who were retweeted."
   [tweets :- [Status]]
