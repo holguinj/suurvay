@@ -37,11 +37,11 @@
     (when (and id text)
       (keywordize-keys status))))
 
-(defmacro cond>!
+(defn cond>!
+  "Places val onto the given async channel iff it is truthy."
   [port val]
-  `(go
-     (when ~val
-       (>! ~port ~val))))
+  (when val
+    (go (>! port val))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Auth
@@ -64,7 +64,7 @@
      :access-secret   \"access-secret-string\"}"
   [creds ch terms]
   (let [search-str (s/join "," terms)
-        chandler (comp #(cond>! ch %) keywordize-tweet)]
+        chandler (comp (partial cond>! ch) keywordize-tweet)]
     (butterfly/start-streaming search-str
                                chandler
                                creds)))
