@@ -11,14 +11,18 @@
 (def test-creds
   "Reads and prepares Twitter API credentials from the environment using
   environ. :test-twitter-creds should be a map with the following
-  keys only:
+  keys:
 
   :consumer-key
   :consumer-secret
   :access-token
   :access-secret"
-  (let [creds (-> :test-twitter-creds env vals)]
-    (apply make-ouauth-creds creds)))
+  (let [{:keys [consumer-key consumer-secret
+                access-token access-secret]} (env :test-twitter-creds)]
+    (make-ouauth-creds consumer-key
+                       consumer-secret
+                       access-token
+                       access-secret)))
 
 (defn bind-creds-fixture [creds]
   (fn [f]
@@ -44,8 +48,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
 (deftest profile-test
-  
-
   (testing "gets hashtags out of profiles and lower-cases them"
     (mocking [get-profile {:description "Hashtag #Twitter in the house. Hashtag #harassmentsucks."}]
       (let [hashtags (get-profile-hashtags "not a real account, output mocked")]
