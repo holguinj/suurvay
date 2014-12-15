@@ -191,6 +191,19 @@
         :ids
         set)))))
 
+(sc/defn get-all-blocks :- #{Identifier}
+  ;;TODO: abstract the de-paging logic in here
+  ([] (get-all-blocks -1))
+  ([cursor]
+   (try-with-limit
+    (let [blocks-req #(t/blocks-ids :oauth-creds *creds* :params {:cursor %})
+          resp (blocks-req cursor)
+          blocks (->> resp :body :ids set)
+          next-cursor (get-in resp [:body :next_cursor])]
+      (if (zero? next-cursor)
+        blocks
+        (into blocks (get-all-blocks next-cursor)))))))
+
 (sc/defn block! :- sc/Bool
   [identifier :- Identifier]
   (let [user (identifier->map identifier)
