@@ -10,11 +10,10 @@
             [clojure.string :as s]
             [suurvay.schema :refer [Identifier UserMap Hashtag Status User]]
             [schema.core :as sc]
-            [twitter.oauth :refer [make-oauth-creds]]
             [twitter.api.restful :as t]))
 
 ;; TODO: Reuse the same map intended for streaming
-(def make-ouauth-creds #'make-oauth-creds)
+(def make-oauth-creds #'twitter.oauth/make-oauth-creds)
 
 (def ^:dynamic *creds* nil)
 
@@ -233,3 +232,9 @@
         (recur (conj acc (:body next-res))
                next-cursor)))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Debug
+(defn print-creds
+  []
+  (println *creds*))

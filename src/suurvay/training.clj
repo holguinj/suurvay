@@ -7,7 +7,7 @@
   These functions are geared towards generating training data, not
   evaluating an unfamiliar user. See the identification namespace for
   the latter."
-  (:require [suurvay.twitter :as t]
+  (:require [suurvay.twitter-rest :as t]
             [suurvay.twitter-pure :refer [invert-frequencies]]
             [clojure.set :refer [difference]]
             [clojure.string :as s]))
@@ -125,7 +125,7 @@
   "Returns a map of users followed by at least the `ratio` of the given users.
   The map has the form {frequency twitter-ids}.
   If not supplied, `ratio` will be 0.75."
-  (top-n-fn t/get-following :concat))
+  (top-n-fn t/get-friends :concat))
 
 (def ^{:arglists '([ratio ids-or-names] [ids-or-names])}
   popular-following-for-users
@@ -148,6 +148,7 @@
   [id-or-name]
   (->> id-or-name
     t/get-profile
+    :description
     sentiments))
 
 (def

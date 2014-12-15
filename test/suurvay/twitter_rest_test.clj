@@ -19,10 +19,10 @@
   :access-secret"
   (let [{:keys [consumer-key consumer-secret
                 access-token access-secret]} (env :test-twitter-creds)]
-    (make-ouauth-creds consumer-key
-                       consumer-secret
-                       access-token
-                       access-secret)))
+    (make-oauth-creds consumer-key
+                      consumer-secret
+                      access-token
+                      access-secret)))
 
 (defn bind-creds-fixture [creds]
   (fn [f]
