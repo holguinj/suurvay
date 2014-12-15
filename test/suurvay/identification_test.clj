@@ -1,0 +1,129 @@
+(ns suurvay.identification-test
+  (:require [clojure.test :refer :all]
+            [schema.test :refer [validate-schemas]]
+            [schema.core :as sc]
+            [suurvay.twitter-rest-test :refer [test-creds bind-creds-fixture]]
+            [suurvay.schema :refer [Status]]
+            [suurvay.identification :refer :all]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Setup and data
+(declare test-status)
+
+(use-fixtures :once (bind-creds-fixture test-creds) validate-schemas)
+
+(def pure-test-map
+  {:limit 10
+   :before #(do (is (sc/validate Status %))
+                (is (= test-status %)) 1)
+   :real-name #(do (is (= "Twitter API (mock)" %)) 1)
+   :profile #(do (is (= (:user test-status) %)) 1)})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Tests
+(deftest pure-test
+  (testing "ID functions are called with available data, sparing API calls if possible"
+    (is (= 3 (test-runner pure-test-map test-status)))))
+
+(deftest with-api-test
+  (testing "the :timeline, :friends, and :followers tests require API access"
+    (let [api-tests {:timeline #(do (is (sc/validate [Status] %))
+                                    (is (= 200 (count %))) 1)
+                     :friends #(do (is (sc/validate [sc/Int] %))
+                                   (is (pos? (count %))) 1)
+                     :followers #(do (is (sc/validate [sc/Int] %))
+                                     (is (pos? (count %))) 1)}
+          complete-test-map (merge pure-test-map api-tests)]
+      (is (= 6 (test-runner complete-test-map test-status))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Example data
+(def test-status
+  {:in_reply_to_screen_name nil,
+   :coordinates nil,
+   :in_reply_to_status_id_str nil,
+   :place nil,
+   :possibly_sensitive false,
+   :geo nil,
+   :in_reply_to_status_id nil,
+   :entities
+   {:hashtags [],
+    :symbols [],
+    :user_mentions [],
+    :urls
+    [{:url "https://t.co/Fk6AlAHKXw",
+      :expanded_url
+      "https://twittercommunity.com/t/deprecation-of-account-update-profile-colors/28692",
+      :display_url "twittercommunity.com/t/deprecation-…",
+      :indices [58 81]}]},
+   :source
+   "<a href=\"http://itunes.apple.com/us/app/twitter/id409789998?mt=12\" rel=\"nofollow\">Twitter for Mac</a>",
+   :lang "en",
+   :in_reply_to_user_id_str nil,
+   :id 540647748186681344,
+   :contributors nil,
+   :truncated false,
+   :retweeted false,
+   :in_reply_to_user_id nil,
+   :id_str "540647748186681344",
+   :favorited false,
+   :user {:description
+          "The Real Twitter API. I tweet about API changes, service issues and happily answer questions about Twitter and our API. Don't get an answer? It's on my website.",
+          :profile_link_color "0084B4",
+          :profile_sidebar_border_color "C0DEED",
+          :is_translation_enabled false,
+          :profile_image_url
+          "http://pbs.twimg.com/profile_images/2284174872/7df3h38zabcvjylnyfe3_normal.png",
+          :profile_use_background_image true,
+          :default_profile false,
+          :profile_background_image_url
+          "http://pbs.twimg.com/profile_background_images/656927849/miyt9dpjz77sc0w3d4vj.png",
+          :is_translator false,
+          :profile_text_color "333333",
+          :profile_banner_url
+          "https://pbs.twimg.com/profile_banners/6253282/1347394302",
+          :profile_location nil,
+          :name "Twitter API (mock)",
+          :profile_background_image_url_https
+          "https://pbs.twimg.com/profile_background_images/656927849/miyt9dpjz77sc0w3d4vj.png",
+          :favourites_count 27,
+          :screen_name "twitterapi",
+          :entities
+          {:url
+           {:urls
+            [{:url "http://t.co/78pYTvWfJd",
+              :expanded_url "http://dev.twitter.com",
+              :display_url "dev.twitter.com",
+              :indices [0 22]}]},
+           :description {:urls []}},
+          :listed_count 12870,
+          :profile_image_url_https
+          "https://pbs.twimg.com/profile_images/2284174872/7df3h38zabcvjylnyfe3_normal.png",
+          :statuses_count 3525,
+          :contributors_enabled false,
+          :following true,
+          :lang "en",
+          :utc_offset -28800,
+          :notifications false,
+          :default_profile_image false,
+          :profile_background_color "C0DEED",
+          :id 6253282,
+          :follow_request_sent false,
+          :url "http://t.co/78pYTvWfJd",
+          :time_zone "Pacific Time (US & Canada)",
+          :profile_sidebar_fill_color "DDEEF6",
+          :protected false,
+          :profile_background_tile true,
+          :id_str "6253282",
+          :geo_enabled true,
+          :location "San Francisco, CA",
+          :followers_count 2570684,
+          :friends_count 48,
+          :verified true,
+          :created_at "Wed May 23 06:01:13 +0000 2007"}
+   :retweet_count 60,
+   :favorite_count 42,
+   :created_at "Thu Dec 04 23:24:02 +0000 2014",
+   :text
+   "Weeeeeeee this is a fun example tweet."})
+

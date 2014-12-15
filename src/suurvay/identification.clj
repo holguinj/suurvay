@@ -2,7 +2,7 @@
   "This namespace contains functions that evaluate an unknown user and
   attempt to determine group membership."
   (:require [clojure.set :as set]
-            [suurvay.twitter :as t]
+            [suurvay.twitter-rest :as t]
             [suurvay.schema :refer [Status User]]))
 
 (def test-order

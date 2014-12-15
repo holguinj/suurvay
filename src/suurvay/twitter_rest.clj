@@ -168,11 +168,14 @@
   (if-let [real-name (get-in identifier [:user :name])]
     real-name
     (cond
-     (and (string? identifier) (not (num-string? identifier)))
-     (-> identifier get-user :name)
+      (contains? identifier :name)
+      (:name identifier)
 
-     :else
-     (-> identifier get-user :name))))
+      (and (string? identifier) (not (num-string? identifier)))
+      (-> identifier get-user :name)
+
+      :else
+      (-> identifier get-user :name))))
 
 (sc/defn get-blocks :- #{Identifier}
   ([] (get-blocks nil))
