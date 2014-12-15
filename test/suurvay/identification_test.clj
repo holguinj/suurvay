@@ -23,7 +23,15 @@
 ;; Tests
 (deftest pure-test
   (testing "ID functions are called with available data, sparing API calls if possible"
-    (is (= 3 (test-runner pure-test-map test-status)))))
+    (is (= 3 (test-runner pure-test-map test-status))))
+
+  (testing "tests complete early if the limit is hit"
+    (let [test-map (assoc pure-test-map :limit 1)]
+      (is (= 1 (test-runner test-map test-status)))))
+
+  (testing "tests complete immediately if the output is ever negative"
+    (let [test-map (assoc pure-test-map :profile (constantly -3))]
+      (is (= -1 (test-runner test-map test-status))))))
 
 (deftest with-api-test
   (testing "the :timeline, :friends, and :followers tests require API access"

@@ -164,11 +164,12 @@
     get-hashtags))
 
 (sc/defn get-name :- sc/Str
-  [identifier :- (sc/either Identifier Status)]
+  ;; TODO refactor this shit! Try using `or`!
+  [identifier :- (sc/either Identifier Status User)]
   (if-let [real-name (get-in identifier [:user :name])]
     real-name
     (cond
-      (contains? identifier :name)
+      (get identifier :name)
       (:name identifier)
 
       (and (string? identifier) (not (num-string? identifier)))
