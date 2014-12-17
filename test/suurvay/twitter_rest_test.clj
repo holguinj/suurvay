@@ -6,13 +6,6 @@
             [suurvay.twitter-rest :refer :all]
             [suurvay.schema :as ssc]))
 
-(comment
-  (def followers (c (get-followers "postpunkjustin")))
-
-  (map #(c (get-followers %)) (take 16 followers))
-
-  )
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Configuration and setup
 (def test-creds

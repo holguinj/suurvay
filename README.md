@@ -44,6 +44,8 @@ I'll break down the keys one by one:
 * `:friends`: This function will be called with a vector of up to 5,000 user IDs that the given user is following. You can only make 15 of these calls per 15-minute period, so I recommend against using this key at all if you can possibly avoid it.
 * `:followers`: This function will be called with a vector of up to 5,000 user IDs that are following the given user. The same caveat applies here as with `:friends`.
 
+>For more detailed information, see [writing test maps](docs/writing_test_maps.md).
+
 ### Initialize a Streaming Tweet Channel
 
 Although you can technically call `score-user` however you like, Suurvay is written with core.async in mind. Here's an example of how to create a channel and direct streaming tweets to it.
