@@ -9,4 +9,4 @@
                  [prismatic/schema "0.3.3"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [caribou/butterfly "0.1.3"]
-                 [twitter-api "0.7.7"]])
+                 [twitter-api "0.7.7-DEBUG"]])

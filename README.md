@@ -14,9 +14,9 @@ A Clojure library for building Twitter autoblocker bots.
 
 Running a bot involves a few steps:
 
-1. Construct a test map for use with `test-runner`.
+1. Construct a test map for use with `score-user`.
 2. Initialize a core.async channel with a stream of tweets.
-3. Start a loop to pass tweets from the channel to `test-runner`, blocking users who pass a given threshold.
+3. Start a loop to pass tweets from the channel to `score-user`, blocking users who pass a given threshold.
 
 ### Construct a Test Map
 
@@ -46,12 +46,12 @@ I'll break down the keys one by one:
 
 ### Initialize a Streaming Tweet Channel
 
-Although you can technically call `test-runner` however you like, Suurvay is written with core.async in mind. Here's an example of how to create a channel and direct streaming tweets to it.
+Although you can technically call `score-user` however you like, Suurvay is written with core.async in mind. Here's an example of how to create a channel and direct streaming tweets to it.
 
 ```clojure
 (ns suurvay.example
   (:require [suurvay.streaming-twitter :refer [filter-stream]]
-            [suurvay.identification :refer [test-runner]]
+            [suurvay.identification :refer [score-user]]
             [clojure.core.async :refer [chan <!! close!]]
             [clojure.pprint :refer [pprint]]))
 
@@ -100,7 +100,7 @@ Now we have everything we need to start the main loop:
 ```clojure
 (while true
   (let [tweet (<!! tweet-channel)
-        score (test-runner test-map tweet)]
+        score (score-user test-map tweet)]
     (when (< 1 score)
       (println "Blocking this jerk!")))) ;; don't just print it, do it.
 ```
@@ -108,11 +108,11 @@ Now we have everything we need to start the main loop:
 ## Development
 
 ### Namespaces
-* `suurvay.identification`: contains the `test-runner` function that does most of the hard work of this library, along with a few pure helper functions for constructing generic rules.
+* `suurvay.identification`: contains the `score-user` function that does most of the hard work of this library, along with a few pure helper functions for constructing generic rules.
 * `suurvay.streaming-twitter`: contains the `filter-stream` function, which opens a Twitter search stream and places the results onto a core.async channel that the caller supplies.
 * `suurvay.training`: contains functions that make heavy use of the Twitter REST API to gather information about groups of Twitter users, including popular hashtags and profile sentiments (pro-X, anti-Y, etc.).
 * `suurvay.twitter-pure`: contains pure functions and predicates that are useful when processing data during identification.
-* `suurvay.twitter-rest`: contains functions that interact directly with the Twitter API. It's usually not necessary to call these directly as `suurvay.identification/test-runner` will do it for you. The exception here is `block!`, which you must call manually.
+* `suurvay.twitter-rest`: contains functions that interact directly with the Twitter API. It's usually not necessary to call these directly as `suurvay.identification/score-user` will do it for you. The exception here is `block!`, which you must call manually.
 
 # Name
 

@@ -31,6 +31,27 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
 
+(sc/defn next-reset :- sc/Int
+  "Given a 'Rate limit exceeded' error from the Twitter API, returns
+  the number of seconds until the next rate limit reset. Returns 901
+  (15 minutes + 1 second) if there is an error parsing the response."
+  [e :- Exception]
+  (try
+    (->> (str e)
+      (re-find #"Next reset at (\d+)")
+      second
+      Integer/parseInt)
+    (catch Exception _
+      901)))
+
+(sc/defn msec-until :- sc/Num
+  "Given a time (in UTC epoch seconds), returns the number of
+  milliseconds until that time."
+  [target-time]
+  (let [now-sec (/ (System/currentTimeMillis) 1000)
+        delta-sec (- target-time now-sec)]
+    (* delta-sec 1000)))
+
 (defmacro try-with-limit
   "Execute the body within a try-catch block. If it fails due to a
   Twitter rate limit, wait until the reset and then execute
@@ -42,7 +63,7 @@
        (catch Exception e#
          (if-not (rate-limit? e#)
            (throw e#)
-           (let [wait-time# (inc (msec-until-reset))
+           (let [wait-time# (inc (msec-until (next-reset e#)))
                  wait-sec# (int (/ wait-time# 1000))]
              (println "Hit Twitter's rate limit! Waiting" wait-sec# "seconds.")
              (Thread/sleep wait-time#)

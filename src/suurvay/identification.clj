@@ -19,15 +19,15 @@
    [:friends     t/get-friends]
    [:followers   t/get-followers]])
 
-(defn test-runner
+(defn score-user
   "Takes a tests map of the following form:
     {:limit       Number
-     :before      (Status        -> score)
-     :real-name   (RealName      -> score)
-     :profile     (User          -> score)
-     :timeline    ([Status]      -> score)
-     :friends     (FriendsList   -> score)
-     :followers   (FollowersList -> score)}
+     :before      (Status     -> score)
+     :real-name   (RealName   -> score)
+     :profile     (User       -> score)
+     :timeline    ([Status]   -> score)
+     :friends     ([ID]       -> score)
+     :followers   ([ID]       -> score)}
 
   and applies the given functions in this order to the relevant data
   from Twitter. If the cumulative score ever meets or surpasses the
