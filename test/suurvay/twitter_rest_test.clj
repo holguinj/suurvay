@@ -17,12 +17,13 @@
   :consumer-secret
   :access-token
   :access-secret"
-  (let [{:keys [consumer-key consumer-secret
-                access-token access-secret]} (env :test-twitter-creds)]
+  (if-let [{:keys [consumer-key consumer-secret
+                   access-token access-secret]} (env :test-twitter-creds)]
     (make-oauth-creds consumer-key
                       consumer-secret
                       access-token
-                      access-secret)))
+                      access-secret)
+    (throw (Exception. "Could not locate :test-twitter-creds in the environment! See doc/testing.md for more information."))))
 
 (defn bind-creds-fixture [creds]
   (fn [f]
