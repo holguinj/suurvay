@@ -4,6 +4,7 @@
             [schema.test :refer [validate-schemas]]
             [environ.core :refer [env]]
             [suurvay.twitter-rest :refer :all]
+            [twitter.api.restful :as tw]
             [suurvay.schema :as ssc]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -48,6 +49,18 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
+(deftest auth-test
+  (let [{:keys [consumer-key consumer-secret]} (env :test-twitter-creds)
+        app-only (make-oauth-creds consumer-key consumer-secret)
+        limit-with-creds (comp #(get-in % [:body :resources :statuses :/statuses/user_timeline :limit])
+                               #(tw/application-rate-limit-status :oauth-creds %))]
+    (testing "The API should provide a higher limit count when app-only auth is used"
+      (let [user-limit (limit-with-creds test-creds)
+            app-limit (limit-with-creds app-only)]
+        ;; If these tests ever fail, it could be due to Twitter changing the rate limits
+        (is (= 180 user-limit))
+        (is (= 300 app-limit))))))
+
 (deftest profile-test
   (testing "gets hashtags out of profiles and lower-cases them"
     (mocking [get-profile {:description "Hashtag #Twitter in the house. Hashtag #harassmentsucks."}]
