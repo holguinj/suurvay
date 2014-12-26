@@ -17,6 +17,8 @@
 
 (def ^:dynamic *creds* nil)
 
+(def ^:dynamic *multi-creds* nil)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pure functions
 
@@ -27,6 +29,13 @@
   (->> (str e)
     (re-find #"Rate limit exceeded")
     boolean))
+
+(sc/defn rotate :- [sc/Any]
+  "Returns a vector of the elements in coll where the first element
+  has been moved to the end of the vector."
+  [coll :- [sc/Any]]
+  (conj (vec (rest coll))
+        (first coll)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -52,22 +61,51 @@
         delta-sec (- target-time now-sec)]
     (* delta-sec 1000)))
 
+(defn try-with-limit-multicreds
+  [thunk]
+  (binding [*creds* (first @*multi-creds*)]
+    (try
+      (thunk)
+      (catch Exception e
+        (if-not (rate-limit? e)
+          (throw e)
+          (binding [*creds* (first (swap! *multi-creds* rotate))]
+            (println "Hit Twitter's rate limit! Retrying with alternate credentials.")
+            (try
+              (thunk)
+              (catch Exception e
+                (if-not (rate-limit? e)
+                  (throw e)
+                  (let [wait-time (+ 1000 (msec-until (next-reset e)))
+                        ;; including a one-second buffer
+                        wait-sec (inc (int (/ wait-time 1000)))]
+                    (println "Hit Twitter's rate limit again! Waiting" wait-sec "seconds.")
+                    (Thread/sleep wait-time)
+                    (thunk)))))))))))
+
+(defn try-with-limit-single-creds
+  [thunk]
+  (try
+    (thunk)
+    (catch Exception e
+      (if-not (rate-limit? e)
+        (throw e)
+        (let [wait-time (+ 1000 (msec-until (next-reset e)))
+              ;; including a one-second buffer
+              wait-sec (inc (int (/ wait-time 1000)))]
+          (println "Hit Twitter's rate limit! Waiting" wait-sec "seconds.")
+          (Thread/sleep wait-time)
+          (thunk))))))
+
 (defmacro try-with-limit
   "Execute the body within a try-catch block. If it fails due to a
   Twitter rate limit, wait until the reset and then execute
   it again."
   [& body]
   `(let [body# (fn [] ~@body)]
-     (try
-       (body#)
-       (catch Exception e#
-         (if-not (rate-limit? e#)
-           (throw e#)
-           (let [wait-time# (inc (msec-until (next-reset e#)))
-                 wait-sec# (int (/ wait-time# 1000))]
-             (println "Hit Twitter's rate limit! Waiting" wait-sec# "seconds.")
-             (Thread/sleep wait-time#)
-             (body#)))))))
+     (if *multi-creds*
+       (try-with-limit-multicreds body#)
+       (try-with-limit-single-creds body#))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions that depend on the Twitter API
@@ -81,7 +119,7 @@
         diff-sec (- reset now)]
     (* 1000 diff-sec)))
 
-(sc/defn get-followers :- [Identifier]
+(sc/defn get-followers :- [sc/Int]
   "Return a vector of follower IDs for the given user."
   [identifier :- (sc/either Identifier Status User)]
   (let [user (identifier->map identifier)]

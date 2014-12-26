@@ -1,4 +1,5 @@
 (ns suurvay.twitter-rest-test
+  (:import (java.util.concurrent TimeoutException))
   (:require [clojure.test :refer :all]
             [schema.core :as sc]
             [schema.test :refer [validate-schemas]]
@@ -26,6 +27,12 @@
                       access-secret)
     (throw (Exception. "Could not locate :test-twitter-creds in the environment! See doc/testing.md for more information."))))
 
+(def app-only-test-creds
+  "Depends on test-creds"
+  (let [{:keys [consumer-key consumer-secret]} (env :test-twitter-creds)]
+    (make-oauth-creds consumer-key
+                      consumer-secret)))
+
 (defn bind-creds-fixture [creds]
   (fn [f]
     (binding [*creds* creds]
@@ -47,8 +54,34 @@
   `(binding [*creds* ~test-creds]
      ~@body))
 
+(defn invoke-timeout [f timeout-ms]
+  (let [thr (Thread/currentThread)
+        fut (future (Thread/sleep timeout-ms)
+                    (.interrupt thr))]
+    (try (f)
+         (catch InterruptedException e
+           (throw (TimeoutException. "Execution timed out!")))
+         (finally
+           (future-cancel fut)))))
+
+(defmacro timeout
+  [ms & body]
+  `(invoke-timeout (fn [] ~@body) ~ms))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
+(deftest pure-functions
+  (testing "rotate"
+    (testing "operates correctly on vectors"
+      (is (= [2 3 1]
+             (rotate [1 2 3]))))
+    (testing "returns a vector when passed a list"
+      (is (= [:b :c :a]
+             (rotate '(:a :b :c)))))
+    (testing "n rotations of an n-length coll returns the original coll"
+      (is (= [1 2 3]
+             (rotate (rotate (rotate [1 2 3]))))))))
+
 (deftest auth-test
   (let [{:keys [consumer-key consumer-secret]} (env :test-twitter-creds)
         app-only (make-oauth-creds consumer-key consumer-secret)
@@ -186,3 +219,24 @@
             followers (get-followers status)]
         (is (sc/validate [sc/Int] followers))
         (is (pos? (count followers)))))))
+
+(deftest multi-creds-test
+  (testing "switches to alternate creds when necessary"
+    (println "About to try to pass Twitter's rate limit")
+    (timeout 15000
+      (binding [*multi-creds* (atom [app-only-test-creds test-creds])]
+        (println "Waiting up to 15 seconds for test to complete.")
+        (let [twenty-users (take 20 (get-followers "twitterapi"))
+              ;; the rate limit for get-followers is 15, so we'll try to
+              ;; grab 20 users' followers
+              ;; We need both the string output and the return value,
+              ;; so this is pretty weird code.
+              friends-of-followers (promise)
+              result-out (with-out-str (deliver friends-of-followers
+                                                (doall (map get-friends twenty-users))))]
+          (is (= 20 (count twenty-users)))
+          (is (= 20 (count @friends-of-followers)))
+          (is (every? (comp pos? count) @friends-of-followers))
+          (is (re-find #"Retrying with alternate credentials" result-out)))))))
+
+
