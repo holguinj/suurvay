@@ -210,6 +210,41 @@
 (defalias UserParam (U (HMap :mandatory {:user-id (U Int Str)})
                        (HMap :mandatory {:screen-name Str})))
 
+(defalias FullTwitterCreds
+  (HMap :mandatory {:consumer-key Str
+                    :consumer-secret Str
+                    :access-token Str
+                    :access-secret Str}
+        :complete? true))
+
+(defalias AppOnlyTwitterCreds
+  (HMap :mandatory {:consumer-key Str
+                    :consumer-secret Str}
+        :complete? true))
+
+(defalias TwitterCreds
+  (U FullTwitterCreds AppOnlyTwitterCreds))
+
+(defalias TwitterAppToken
+  (HMap :mandatory
+        {:bearer Str}))
+
+(defalias TwitterUserToken
+  (HMap :mandatory
+        {:consumer
+         (HMap :mandatory
+               {:key Str
+                :secret Str
+                :request-uri Str
+                :access-uri Str
+                :authorize-uri Str
+                :signature-method (Val :hmac-sha1)}),
+         :access-token Str
+         :access-token-secret Str}) )
+
+(defalias TwitterToken
+  (U TwitterAppToken TwitterUserToken))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-rest functions
 (ann ^:no-check suurvay.twitter-rest/get-followers [Identifier -> (Vec Int)])
@@ -269,3 +304,8 @@
 (ann ^:no-check suurvay.twitter-rest/timeline-endorsed-hashtags [(Seq Status) -> (Seq Str)])
 
 (ann ^:no-check suurvay.twitter-rest/faved-retweeted-users [(Seq Status) -> (t/Set Int)])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Foreign function annotations
+(ann ^:no-check twitter.oauth/make-oauth-creds (IFn [Str Str -> TwitterAppToken]
+                                                    [Str Str Str Str -> TwitterUserToken]))
