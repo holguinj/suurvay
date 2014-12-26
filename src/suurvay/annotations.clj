@@ -247,6 +247,10 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-rest functions
+(ann ^:no-check suurvay.twitter-rest/make-oauth-creds (IFn [Str Str -> TwitterAppToken]
+                                                    [Str Str Str Str -> TwitterUserToken]))
+;; ^^ this is technically foreign, but it is exposed in this ns
+
 (ann ^:no-check suurvay.twitter-rest/get-followers [Identifier -> (Vec Int)])
 
 (ann ^:no-check suurvay.twitter-rest/get-friends [Identifier (U Keyword Any) * -> (Vec Int)])
