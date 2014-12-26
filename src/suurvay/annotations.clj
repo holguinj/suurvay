@@ -4,10 +4,6 @@
              [Any Bool Fn HMap HVec IFn Int Keyword Map Num Option Seq Str
               U Val Vec ann defalias]]))
 
-(ann ^:no-check suurvay.twitter-rest/get-all-blocks [-> (Vec Int)])
-
-(ann ^:no-check suurvay.twitter-rest/block! [(U Str Int) -> true])
-
 (defalias Coordinates
   (HMap
    :mandatory
@@ -203,3 +199,38 @@
     :show_all_inline_media Bool
     :screen_name Str}))
 
+(defalias Identifier (U Str Int Status User UserAbbrev))
+
+(ann ^:no-check suurvay.twitter-rest/get-followers [Identifier -> (Vec Int)])
+
+(ann ^:no-check suurvay.twitter-rest/get-friends [Identifier (U Keyword Any) * -> (Vec Int)])
+
+(ann ^:no-check suurvay.twitter-rest/ids->names [(Seq Int) -> (Seq Str)])
+
+(ann ^:no-check suurvay.twitter-rest/names->ids [(Seq Str) -> (Seq Int)])
+
+(ann ^:no-check suurvay.twitter-rest/get-timeline-details [Identifier -> (Seq Status)])
+
+(ann ^:no-check suurvay.twitter-rest/get-timeline [Identifier -> (Seq Str)])
+
+(ann ^:no-check suurvay.twitter-rest/get-user-hashtags [Identifier -> (t/Set Str)])
+
+(ann ^:no-check suurvay.twitter-rest/get-users-hashtags [(Seq Identifier) -> (t/Map Int (Seq Str))])
+
+(ann ^:no-check suurvay.twitter-rest/get-user [Identifier -> User])
+
+(ann ^:no-check suurvay.twitter-rest/get-id [Identifier -> Int])
+
+(ann ^:no-check suurvay.twitter-rest/get-profile [Identifier -> User])
+
+(ann ^:no-check suurvay.twitter-rest/get-profile-hashtags [Identifier -> (t/Set Str)])
+
+(ann ^:no-check suurvay.twitter-rest/get-name [Identifier -> Str])
+
+(ann ^:no-check suurvay.twitter-rest/get-blocks [-> (t/Set Str)])
+
+(ann ^:no-check suurvay.twitter-rest/get-all-blocks [-> (Vec Int)])
+
+(ann ^:no-check suurvay.twitter-rest/block! [(U Str Int) -> true])
+
+(ann ^:no-check suurvay.twitter-rest/unblock! [Identifier -> Bool])

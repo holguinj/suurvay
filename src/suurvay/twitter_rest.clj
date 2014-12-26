@@ -167,14 +167,25 @@
      (-> (t/users-show :oauth-creds *creds* :params params)
        (get :body)))))
 
+(sc/defn get-id :- sc/Int
+  "Given a user-id, user object, status object, or screen name, return
+  the relevant user's ID."
+  [identifier :- Identifier]
+  (or (and (integer? identifier) identifier)                  ;; ID
+      (get identifier :id)                                    ;; User or UserAbbrev
+      (get-in identifier [:user :id])                         ;; Status
+      (and (string? identifier) (-> identifier get-user :id)) ;; screen name
+      (throw (IllegalArgumentException.
+              (str "get-id called with this: " identifier)))))
+
 (sc/defn get-profile :- User
   [identifier :- (sc/either Identifier User Status)]
   (cond
-    (or (:profile identifier) (:screen_name identifier)) identifier 
+    (or (:profile identifier) (:screen_name identifier)) identifier ;; User
 
-    (get-in identifier [:user :screen_name]) (:user identifier)
+    (get-in identifier [:user :screen_name]) (:user identifier) ;; Status
 
-    :else (get-user identifier)))
+    :else (get-user identifier))) ;; ID/screen name
 
 (sc/defn get-profile-hashtags :- #{Hashtag}
   [identifier :- Identifier]
@@ -184,19 +195,15 @@
     get-hashtags))
 
 (sc/defn get-name :- sc/Str
-  ;; TODO refactor this shit! Try using `or`!
+  "Given a user-id, user object, status object, or screen name, return
+  the relevant user's real name."
   [identifier :- (sc/either Identifier Status User)]
-  (if-let [real-name (get-in identifier [:user :name])]
-    real-name
-    (cond
-      (get identifier :name)
-      (:name identifier)
-
-      (and (string? identifier) (not (num-string? identifier)))
-      (-> identifier get-user :name)
-
-      :else
-      (-> identifier get-user :name))))
+  (or (get identifier :name) ;; User(Abbrev)
+      (get-in identifier [:user :name]) ;; Status
+      (and (string? identifier) (-> identifier get-user :name)) ;; screen_name
+      (and (integer? identifier) (-> identifier get-user :name)) ;; ID
+      (throw (IllegalArgumentException.
+              (str "get-name called with this: " identifier)))))
 
 (sc/defn get-blocks :- #{Identifier}
   ([] (get-blocks nil))
