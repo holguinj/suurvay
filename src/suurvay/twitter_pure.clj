@@ -10,7 +10,7 @@
             [twitter.api.restful :as t]))
 
 ;; TODO: Reuse the same map intended for streaming
-(def make-ouauth-creds #'make-oauth-creds)
+(def make-oauth-creds #'make-oauth-creds)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pure functions
