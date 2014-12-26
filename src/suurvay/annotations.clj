@@ -4,6 +4,8 @@
              [Any Bool Fn HMap HVec IFn Int Keyword Map Num Option Seq Str
               U Val Vec ann defalias]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Inner (private) data types
 (defalias Coordinates
   (HMap
    :mandatory
@@ -43,6 +45,8 @@
          :hashtags (Vec HashTagEntity)
          :user_mentions (Vec MentionsEntity)}))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Twitter response types
 (defalias UserAbbrev
   (HMap
    :mandatory
@@ -199,8 +203,15 @@
     :show_all_inline_media Bool
     :screen_name Str}))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Internal types
 (defalias Identifier (U Str Int Status User UserAbbrev))
 
+(defalias UserParam (U (HMap :mandatory {:user-id (U Int Str)})
+                       (HMap :mandatory {:screen-name Str})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; twitter-rest functions
 (ann ^:no-check suurvay.twitter-rest/get-followers [Identifier -> (Vec Int)])
 
 (ann ^:no-check suurvay.twitter-rest/get-friends [Identifier (U Keyword Any) * -> (Vec Int)])
@@ -234,3 +245,27 @@
 (ann ^:no-check suurvay.twitter-rest/block! [(U Str Int) -> true])
 
 (ann ^:no-check suurvay.twitter-rest/unblock! [Identifier -> Bool])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; twitter-pure functions
+(ann ^:no-check suurvay.twitter-rest/num-string? [Any -> Bool])
+
+(ann ^:no-check suurvay.twitter-rest/identifier->map [Identifier -> UserParam])
+
+(ann ^:no-check suurvay.twitter-rest/get-hashtags [(Option Str) -> (t/Set Str)])
+
+(ann ^:no-check suurvay.twitter-rest/timeline-hashtags [(Seq Status) -> (t/Set Str)])
+
+(ann ^:no-check suurvay.twitter-rest/invert-frequencies [(Map Any Int) -> (Map Int (Seq Any))])
+
+(ann ^:no-check suurvay.twitter-rest/rate-limit? [Exception -> Boolean])
+
+(ann ^:no-check suurvay.twitter-rest/retweet-statuses [(Seq Status) -> (Seq Str)])
+
+(ann ^:no-check suurvay.twitter-rest/retweeted-users [(Seq Status) -> (t/Set Int)])
+
+(ann ^:no-check suurvay.twitter-rest/endorsed? [Status -> Bool])
+
+(ann ^:no-check suurvay.twitter-rest/timeline-endorsed-hashtags [(Seq Status) -> (Seq Str)])
+
+(ann ^:no-check suurvay.twitter-rest/faved-retweeted-users [(Seq Status) -> (t/Set Int)])

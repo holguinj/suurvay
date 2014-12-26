@@ -26,16 +26,16 @@
   {:user-id x}, otherwise return {:screen-name x}."
   [x :- (sc/either Identifier User Status)]
   (cond
-    (get-in x [:user :id])
+    (get-in x [:user :id]) ;; Status
     {:user-id (get-in x [:user :id])}
 
-    (or (number? x) (num-string? x))
+    (or (number? x) (num-string? x)) ;; ID/ID-str
     {:user-id x}
 
-    (string? x)
+    (string? x) ;; screen-name
     {:screen-name x}
         
-    (:id x)
+    (:id x) ;; User
     {:user-id (:id x)}))
 
 (sc/defn get-hashtags :- #{Hashtag}
