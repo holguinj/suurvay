@@ -2,7 +2,8 @@
   "Contains annotations for functions *outside* of this project."
   (:require [clojure.core.typed :as t :refer
              [Any Bool Fn HMap HVec IFn Int Keyword Map Num Option Seq Str
-              U Val Vec ann defalias]]))
+              U Val Vec ann defalias]]
+            [clojure.core.typed.async :refer [Chan]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inner (private) data types
@@ -308,6 +309,10 @@
 (ann ^:no-check suurvay.twitter-rest/timeline-endorsed-hashtags [(Seq Status) -> (Seq Str)])
 
 (ann ^:no-check suurvay.twitter-rest/faved-retweeted-users [(Seq Status) -> (t/Set Int)])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; streaming-twitter functions
+(ann ^:no-check suurvay.streaming-twitter/filter-stream [FullTwitterCreds (Chan Status) (t/NonEmptyVec Str) -> (Map Keyword Any)])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Foreign function annotations
