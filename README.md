@@ -115,6 +115,7 @@ Now we have everything we need to start the main loop:
 * `suurvay.training`: contains functions that make heavy use of the Twitter REST API to gather information about groups of Twitter users, including popular hashtags and profile sentiments (pro-X, anti-Y, etc.).
 * `suurvay.twitter-pure`: contains pure functions and predicates that are useful when processing data during identification.
 * `suurvay.twitter-rest`: contains functions that interact directly with the Twitter API. It's usually not necessary to call these directly as `suurvay.identification/score-user` will do it for you. The exception here is `block!`, which you must call manually.
+* `suurvay.annotations`: contains [core.typed](https://github.com/clojure/core.typed/) annotations for the types and functions in this project. Note that none of this code makes use of the annotations yet -- they're included strictly as an aid for those who would like to use this library in a typed Clojure project.
 
 # Name
 
