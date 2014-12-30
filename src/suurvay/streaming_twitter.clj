@@ -16,26 +16,6 @@
                   name profile user-creation-date
                   verified followers-count])
 
-(defn- tweet->rec
-  "DEPRECATED:
-  
-  Used to construct a Tweet object from a Status object. Since Tweet
-  objects will no longer be used, this is here only as a reference
-  during The Great Refactoring."
-  [tweet]
-  (let [id          (get-in tweet ["user" "id"])
-        name        (get-in tweet ["user" "name"])
-        screen-name (get-in tweet ["user" "screen_name"] "")
-        text        (get-in tweet ["text"])
-        profile     (get-in tweet ["user" "description"] "")
-        user-creation-date (get-in tweet ["user" "created_at"]) ;; untested
-        verified   (get-in tweet ["user" "verified"]) ;; untested
-        followers-count (get-in tweet ["user" "followers_count"])] ;; untested
-    (if (and id text)
-      (Tweet. id text screen-name
-              name profile user-creation-date
-              verified followers-count))))
-
 (sc/defn keywordize-tweet :- (sc/maybe Status)
   "Quickly validates whether the given status is a usable tweet,
   returning it if it is. Otherwise returns nil."
