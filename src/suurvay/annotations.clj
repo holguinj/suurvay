@@ -311,6 +311,20 @@
 (ann ^:no-check suurvay.twitter-rest/faved-retweeted-users [(Seq Status) -> (t/Set Int)])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; identification
+(defalias TestMap
+  (HMap :mandatory
+        {:limit Number}
+        :optional
+        {:before (Option [Identifier -> Number])
+         :real-name (Option [Str -> Number])
+         :profile (Option [User -> Number])
+         :timeline (Option [(Seq Status) -> Number])
+         :friends (Option [(Seq Int) -> Number])
+         :followers (Option [(Seq Int) -> Number])}))
+(ann ^:no-check suurvay.identification/score-user [TestMap Identifier -> Number])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; streaming-twitter functions
 (ann ^:no-check suurvay.streaming-twitter/filter-stream [FullTwitterCreds (Chan Status) (t/NonEmptyVec Str) -> (Map Keyword Any)])
 
