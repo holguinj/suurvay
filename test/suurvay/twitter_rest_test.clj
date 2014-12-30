@@ -82,6 +82,13 @@
       (is (= [1 2 3]
              (rotate (rotate (rotate [1 2 3]))))))))
 
+(deftest blocks
+  (testing "Can retrieve a list of blocked users"
+    (let [blocked-users (get-blocks)]
+      ;; If this test fails, make sure the authenticated user has
+      ;; blocked at least one account
+      (is (pos? (count blocked-users))))))
+
 (deftest auth-test
   (let [{:keys [consumer-key consumer-secret]} (env :test-twitter-creds)
         app-only (make-oauth-creds consumer-key consumer-secret)

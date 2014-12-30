@@ -255,19 +255,18 @@
 
 (sc/defn get-blocks :- #{Identifier}
   ([] (get-blocks nil))
-  ([identifier :- Identifier]
+  ([identifier :- (sc/maybe Identifier)]
    (assert-user-creds)
-   (try-with-limit-single-creds
-    #(let [base-params {}
-           params (if identifier
-                    (merge base-params (identifier->map identifier))
-                    base-params)]
-       (try-with-limit
-        (->> params
-          (t/blocks-ids :oauth-creds *creds* :params)
-          :body
-          :ids
-          set))))))
+   (let [base-params {}
+         params (if identifier
+                  (merge base-params (identifier->map identifier))
+                  base-params)]
+     (try-with-limit-single-creds
+      #(->> params
+         (t/blocks-ids :oauth-creds *creds* :params)
+         :body
+         :ids
+         set)))))
 
 (sc/defn get-all-blocks :- #{Identifier}
   ;;TODO: abstract the de-paging logic in here
