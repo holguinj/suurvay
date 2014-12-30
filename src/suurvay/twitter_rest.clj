@@ -37,6 +37,16 @@
   (conj (vec (rest coll))
         (first coll)))
 
+(defn assert-creds []
+  (or *multi-creds*
+      *creds*
+      (throw (IllegalArgumentException. "Neither *creds* nor *multi-creds* was bound."))))
+
+(defn assert-user-creds
+  []
+  (or *creds*
+      (throw (IllegalArgumentException. "*creds* must be bound to call this function."))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
 
@@ -246,29 +256,33 @@
 (sc/defn get-blocks :- #{Identifier}
   ([] (get-blocks nil))
   ([identifier :- Identifier]
-   (let [base-params {}
-         params (if identifier
-                  (merge base-params (identifier->map identifier))
-                  base-params)]
-     (try-with-limit
-      (->> params
-        (t/blocks-ids :oauth-creds *creds* :params)
-        :body
-        :ids
-        set)))))
+   (assert-user-creds)
+   (try-with-limit-single-creds
+    #(let [base-params {}
+           params (if identifier
+                    (merge base-params (identifier->map identifier))
+                    base-params)]
+       (try-with-limit
+        (->> params
+          (t/blocks-ids :oauth-creds *creds* :params)
+          :body
+          :ids
+          set))))))
 
 (sc/defn get-all-blocks :- #{Identifier}
   ;;TODO: abstract the de-paging logic in here
   ([] (get-all-blocks -1))
   ([cursor]
-   (try-with-limit
-    (let [blocks-req #(t/blocks-ids :oauth-creds *creds* :params {:cursor %})
-          resp (blocks-req cursor)
-          blocks (->> resp :body :ids set)
-          next-cursor (get-in resp [:body :next_cursor])]
-      (if (zero? next-cursor)
-        blocks
-        (into blocks (get-all-blocks next-cursor)))))))
+   (assert-user-creds)
+   (try-with-limit-single-creds
+    (fn []
+      (let [blocks-req #(t/blocks-ids :oauth-creds *creds* :params {:cursor %})
+            resp (blocks-req cursor)
+            blocks (->> resp :body :ids set)
+            next-cursor (get-in resp [:body :next_cursor])]
+        (if (zero? next-cursor)
+          blocks
+          (into blocks (get-all-blocks next-cursor))))))))
 
 (sc/defn block! :- sc/Bool
   [identifier :- Identifier]
