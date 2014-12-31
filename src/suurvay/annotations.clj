@@ -1,8 +1,9 @@
 (ns suurvay.annotations
   "Contains annotations for functions *outside* of this project."
-  (:require [clojure.core.typed :as t :refer
-             [Any Bool Fn HMap HVec IFn Int Keyword Map Num Option Seq Str
-              U Val Vec ann defalias]]
+  (:require [clojure.core.typed :as t :refer [Any Bool Fn HMap HVec
+                                              IFn Int Keyword Map Num
+                                              Option Seq Str U Val Vec
+                                              ann defalias]]
             [clojure.core.typed.async :refer [Chan]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
