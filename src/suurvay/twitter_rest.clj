@@ -34,8 +34,10 @@
   "Returns a vector of the elements in coll where the first element
   has been moved to the end of the vector."
   [coll :- [sc/Any]]
-  (conj (vec (rest coll))
-        (first coll)))
+  (if-not (seq coll)
+    []
+    (conj (vec (rest coll))
+          (first coll))))
 
 (defn assert-user-creds
   []
