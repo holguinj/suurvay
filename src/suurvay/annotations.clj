@@ -322,6 +322,7 @@
          :timeline (Option [(Seq Status) -> Number])
          :friends (Option [(Seq Int) -> Number])
          :followers (Option [(Seq Int) -> Number])}))
+
 (ann ^:no-check suurvay.identification/score-user [TestMap Identifier -> Number])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
