@@ -37,11 +37,6 @@
   (conj (vec (rest coll))
         (first coll)))
 
-(defn assert-creds []
-  (or *multi-creds*
-      *creds*
-      (throw (IllegalArgumentException. "Neither *creds* nor *multi-creds* was bound."))))
-
 (defn assert-user-creds
   []
   (or *creds*
@@ -113,9 +108,10 @@
   it again."
   [& body]
   `(let [body# (fn [] ~@body)]
-     (if *multi-creds*
-       (try-with-limit-multicreds body#)
-       (try-with-limit-single-creds body#))))
+     (cond
+       *multi-creds* (try-with-limit-multicreds body#)
+       *creds* (try-with-limit-single-creds body#)
+       :else (throw (IllegalArgumentException. "*creds* must be bound to call this function.")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions that depend on the Twitter API
