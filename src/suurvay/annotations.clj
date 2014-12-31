@@ -312,6 +312,14 @@
 (ann ^:no-check suurvay.twitter-rest/faved-retweeted-users [(Seq Status) -> (t/Set Int)])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; training
+(ann ^:no-check suurvay.training/sentiments [(t/Option Str) -> (t/Seq Str)])
+
+(ann ^:no-check suurvay.training/popularity-filter [Num -> [(Map t/Any t/Num) -> Bool]])
+
+(ann ^:no-check suurvay.training/confidence->count [Num (t/Seq t/Any) -> t/Num])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; identification
 (defalias TestMap
   (HMap :mandatory
@@ -325,6 +333,10 @@
          :followers (Option [(Seq Int) -> Number])}))
 
 (ann ^:no-check suurvay.identification/score-user [TestMap Identifier -> Number])
+
+(ann ^:no-check suurvay.identification/count-hits [(t/Set t/Any) (t/Set t/Any) -> t/Num])
+
+(ann ^:no-check suurvay.identification/regex-hits [(t/Seq java.util.regex.Pattern) Str -> t/Num])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; streaming-twitter functions
