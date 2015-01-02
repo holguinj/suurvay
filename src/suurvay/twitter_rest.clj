@@ -281,7 +281,7 @@
           blocks
           (into blocks (get-all-blocks next-cursor))))))))
 
-(sc/defn block! :- sc/Bool
+(sc/defn block! :- User
   [identifier :- Identifier]
   (let [user (identifier->map identifier)
         params (assoc user :include-entities false, :skip-status true)]
@@ -289,13 +289,12 @@
      (t/blocks-create :oauth-creds *creds* :params params)
      true)))
 
-(sc/defn unblock! :- sc/Bool
+(sc/defn unblock! :- User
   [identifier :- Identifier]
   (let [user (identifier->map identifier)
         params (assoc user :include-entities false, :skip-status true)]
     (try-with-limit
-     (t/blocks-destroy :oauth-creds *creds* :params params)
-     true)))
+     (t/blocks-destroy :oauth-creds *creds* :params params))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Enter at your own risk!

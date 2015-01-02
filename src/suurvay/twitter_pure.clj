@@ -18,7 +18,6 @@
   (boolean (and (string? x) (re-find #"^\d+$" x))))
 
 (sc/defn identifier->map :- UserMap
-  ;; TODO: rename this to ->auth or something
   "If x is a number or appears to be a stringified user ID, return
   {:user-id x}, otherwise return {:screen-name x}."
   [x :- (sc/either Identifier User Status)]

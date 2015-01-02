@@ -252,8 +252,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-rest functions
+(ann ^:no-check *creds* (t/Option TwitterToken))
+
+(ann ^:no-check *multi-creds* (t/Option (t/Atom1 (t/Vec TwitterToken))))
+
 (ann ^:no-check suurvay.twitter-rest/make-oauth-creds (IFn [Str Str -> TwitterAppToken]
-                                                    [Str Str Str Str -> TwitterUserToken]))
+                                                           [Str Str Str Str -> TwitterUserToken]))
 ;; ^^ this is technically foreign, but it is exposed in this ns
 
 (ann ^:no-check suurvay.twitter-rest/get-followers [Identifier -> (Vec Int)])
@@ -286,9 +290,9 @@
 
 (ann ^:no-check suurvay.twitter-rest/get-all-blocks [-> (Vec Int)])
 
-(ann ^:no-check suurvay.twitter-rest/block! [(U Str Int) -> true])
+(ann ^:no-check suurvay.twitter-rest/block! [Identifier -> User])
 
-(ann ^:no-check suurvay.twitter-rest/unblock! [Identifier -> Bool])
+(ann ^:no-check suurvay.twitter-rest/unblock! [Identifier -> User])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-pure functions
