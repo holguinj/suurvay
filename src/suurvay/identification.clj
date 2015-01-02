@@ -53,9 +53,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utility functions that should be useful when writing identification functions
 (defn count-hits
-  "Given two sets, return the number of items they have in common."
+  "Given two seqs, return the number of items they have in common."
   [comparison-set subject-set]
-  (-> (set/intersection comparison-set subject-set)
+  (-> (set/intersection (set comparison-set)
+                        (set subject-set))
     count))
 
 (defn regex-hits

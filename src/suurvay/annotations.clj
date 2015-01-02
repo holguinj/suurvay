@@ -247,6 +247,9 @@
 (defalias TwitterToken
   (U TwitterAppToken TwitterUserToken))
 
+(defalias MultiCreds
+  (t/Atom1 (t/Vec TwitterToken)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-rest functions
 (ann ^:no-check suurvay.twitter-rest/make-oauth-creds (IFn [Str Str -> TwitterAppToken]
@@ -289,27 +292,27 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-pure functions
-(ann ^:no-check suurvay.twitter-rest/num-string? [Any -> Bool])
+(ann ^:no-check suurvay.twitter-pure/num-string? [Any -> Bool])
 
-(ann ^:no-check suurvay.twitter-rest/identifier->map [Identifier -> UserParam])
+(ann ^:no-check suurvay.twitter-pure/identifier->map [Identifier -> UserParam])
 
-(ann ^:no-check suurvay.twitter-rest/get-hashtags [(Option Str) -> (t/Set Str)])
+(ann ^:no-check suurvay.twitter-pure/get-hashtags [(Option Str) -> (t/Set Str)])
 
-(ann ^:no-check suurvay.twitter-rest/timeline-hashtags [(Seq Status) -> (t/Set Str)])
+(ann ^:no-check suurvay.twitter-pure/timeline-hashtags [(Seq Status) -> (t/Set Str)])
 
-(ann ^:no-check suurvay.twitter-rest/invert-frequencies [(Map Any Int) -> (Map Int (Seq Any))])
+(ann ^:no-check suurvay.twitter-pure/invert-frequencies [(Map Any Int) -> (Map Int (Seq Any))])
 
-(ann ^:no-check suurvay.twitter-rest/rate-limit? [Exception -> Boolean])
+(ann ^:no-check suurvay.twitter-pure/rate-limit? [Exception -> Boolean])
 
-(ann ^:no-check suurvay.twitter-rest/retweet-statuses [(Seq Status) -> (Seq Str)])
+(ann ^:no-check suurvay.twitter-pure/retweet-statuses [(Seq Status) -> (Seq Str)])
 
-(ann ^:no-check suurvay.twitter-rest/retweeted-users [(Seq Status) -> (t/Set Int)])
+(ann ^:no-check suurvay.twitter-pure/retweeted-users [(Seq Status) -> (t/Set Int)])
 
-(ann ^:no-check suurvay.twitter-rest/endorsed? [Status -> Bool])
+(ann ^:no-check suurvay.twitter-pure/endorsed? [Status -> Bool])
 
-(ann ^:no-check suurvay.twitter-rest/timeline-endorsed-hashtags [(Seq Status) -> (Seq Str)])
+(ann ^:no-check suurvay.twitter-pure/timeline-endorsed-hashtags [(Seq Status) -> (Seq Str)])
 
-(ann ^:no-check suurvay.twitter-rest/faved-retweeted-users [(Seq Status) -> (t/Set Int)])
+(ann ^:no-check suurvay.twitter-pure/faved-retweeted-users [(Seq Status) -> (t/Set Int)])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; training
@@ -334,9 +337,9 @@
 
 (ann ^:no-check suurvay.identification/score-user [TestMap Identifier -> Number])
 
-(ann ^:no-check suurvay.identification/count-hits [(t/Set t/Any) (t/Set t/Any) -> t/Num])
+(ann ^:no-check suurvay.identification/count-hits [(t/Seqable t/Any) (t/Seqable t/Any) -> t/Num])
 
-(ann ^:no-check suurvay.identification/regex-hits [(t/Seq java.util.regex.Pattern) Str -> t/Num])
+(ann ^:no-check suurvay.identification/regex-hits [(t/Seqable java.util.regex.Pattern) Str -> t/Num])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; streaming-twitter functions
