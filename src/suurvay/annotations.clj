@@ -252,9 +252,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-rest functions
-(ann ^:no-check *creds* (t/Option TwitterToken))
+(ann ^:no-check suurvay.twitter-rest/*creds* (t/Option TwitterToken))
 
-(ann ^:no-check *multi-creds* (t/Option (t/Atom1 (t/Vec TwitterToken))))
+(ann ^:no-check suurvay.twitter-rest/*multi-creds* (t/Option MultiCreds))
 
 (ann ^:no-check suurvay.twitter-rest/make-oauth-creds (IFn [Str Str -> TwitterAppToken]
                                                            [Str Str Str Str -> TwitterUserToken]))
