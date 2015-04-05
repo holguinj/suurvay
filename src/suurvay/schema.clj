@@ -4,14 +4,6 @@
 (def NumStr
   (sc/pred (partial re-find #"^\d+$") "numeric string"))
 
-(def Identifier
-  (sc/either
-    sc/Int
-    NumStr
-    sc/Str
-    {:id sc/Int}
-    {:user sc/Str}))
-
 (def UserMap
   (sc/either {:user-id (sc/either NumStr sc/Int)}
              {:screen-name sc/Str}))
@@ -36,3 +28,13 @@
    :description sc/Str
    :name sc/Str
    sc/Keyword sc/Any})
+
+(def Identifier
+  (sc/either
+    sc/Int
+    NumStr
+    sc/Str
+    {:id sc/Int}
+    {:user sc/Str}
+    Status
+    User))
