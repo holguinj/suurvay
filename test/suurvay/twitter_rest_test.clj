@@ -25,7 +25,8 @@
                       consumer-secret
                       access-token
                       access-secret)
-    (throw (Exception. "Could not locate :test-twitter-creds in the environment! See doc/testing.md for more information."))))
+    (throw (Exception. (str "Could not locate :test-twitter-creds in the environment!"
+                            " See doc/testing.md for more information.")))))
 
 (def app-only-test-creds
   "Depends on test-creds"
@@ -82,24 +83,25 @@
       (is (= [1 2 3]
              (rotate (rotate (rotate [1 2 3]))))))))
 
-(deftest blocks
+(deftest ^:acceptance blocks
   (testing "Can retrieve a list of blocked users"
     (let [blocked-users (get-blocks)]
       ;; If this test fails, make sure the authenticated user has
       ;; blocked at least one account
       (is (pos? (count blocked-users))))))
 
-(deftest auth-test
-  (let [{:keys [consumer-key consumer-secret]} (env :test-twitter-creds)
-        app-only (make-oauth-creds consumer-key consumer-secret)
-        limit-with-creds (comp #(get-in % [:body :resources :statuses :/statuses/user_timeline :limit])
-                               #(tw/application-rate-limit-status :oauth-creds %))]
-    (testing "The API should provide a higher limit count when app-only auth is used"
-      (let [user-limit (limit-with-creds test-creds)
-            app-limit (limit-with-creds app-only)]
-        ;; If these tests ever fail, it could be due to Twitter changing the rate limits
-        (is (= 180 user-limit))
-        (is (= 300 app-limit))))))
+(defn- get-limit-with-creds
+  [creds]
+  (-> (tw/application-rate-limit-status :oauth-creds creds)
+    (get-in [:body :resources :statuses :/statuses/user_timeline :limit])))
+
+(deftest ^:acceptance auth-test
+  (testing "The API should provide a higher limit count when app-only auth is used"
+    (let [user-limit (get-limit-with-creds test-creds)
+          app-limit (get-limit-with-creds app-only-test-creds)]
+      ;; If these tests ever fail, it could be due to Twitter changing the rate limits
+      (is (= 180 user-limit))
+      (is (= 300 app-limit)))))
 
 (deftest profile-test
   (testing "gets hashtags out of profiles and lower-cases them"
@@ -107,7 +109,7 @@
       (let [hashtags (get-profile-hashtags "not a real account, output mocked")]
         (is (= #{"#twitter" "#harassmentsucks"} hashtags)))))) 
 
-(deftest follow-test
+(deftest ^:acceptance follow-test
   (testing "can get followers"
     (let [followers (get-followers "twitter")]
       (is (pos? (count followers)))))
@@ -117,7 +119,7 @@
       (is (pos? (count friends)))
       (is (sc/validate [ssc/Identifier] friends)))))
 
-(deftest timeline-test
+(deftest ^:acceptance timeline-test
   (testing "can get a timeline"
     (let [timeline (get-timeline "twitter")]
       (is (pos? (count timeline)))))
@@ -129,7 +131,7 @@
       ;; without using one.
       (is (pos? (count hashtags))))))
 
-(deftest names-and-ids
+(deftest ^:acceptance names-and-ids
   (testing "can convert screen-name -> id -> name"
     (let [ids (names->ids ["twitter" "twitterapi"])
           names (ids->names ids)]
@@ -138,7 +140,7 @@
       (is (= #{783214 6253282}
              (set ids))))))
 
-(deftest identification-functions
+(deftest ^:acceptance identification-functions
   (testing "retrieves the correct real name"
     (testing "given a screen-name"
       (is (= "Twitter API"
@@ -227,16 +229,24 @@
         (is (sc/validate [sc/Int] followers))
         (is (pos? (count followers)))))))
 
-(deftest multi-creds-test
+(def test-multi-creds
+  (atom [app-only-test-creds test-creds]))
+
+(defmacro with-test-multi-creds
+  [& body]
+  `(binding [*multi-creds* test-multi-creds]
+     ~@body))
+
+(deftest ^:acceptance multi-creds-test
   (testing "switches to alternate creds when necessary"
     (println "About to try to pass Twitter's rate limit")
     (timeout 15000
-      (binding [*multi-creds* (atom [app-only-test-creds test-creds])]
+      (with-test-multi-creds
         (println "Waiting up to 15 seconds for test to complete.")
         (let [twenty-users (take 20 (get-followers "twitterapi"))
               ;; the rate limit for get-followers is 15, so we'll try to
               ;; grab 20 users' followers
-              ;; We need both the string output and the return value,
+              ;; We need both the standard output and the return value,
               ;; so this is pretty weird code.
               friends-of-followers (promise)
               result-out (with-out-str (deliver friends-of-followers
