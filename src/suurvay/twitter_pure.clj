@@ -109,3 +109,11 @@
     (map #(get-in % [:user :id]))
     set))
 
+(sc/defn get-id :- (sc/maybe sc/Int)
+  "Attempts to find an ID in the given Identifier, returning nil if it
+  can't be done in a pure way."
+  [identifier :- Identifier]
+  (or
+   (and (integer? identifier) identifier) ;; ID
+   (get-in identifier [:user :id])        ;; Status
+   (get identifier :id)))                 ;; User object

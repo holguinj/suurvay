@@ -1,12 +1,12 @@
 (ns suurvay.twitter-rest
   "This namespace contains generic functions for interacting with the
   Twitter API."
-  (:require [suurvay.twitter-pure :refer [num-string? identifier->map
-                                          get-hashtags timeline-hashtags
-                                          timeline-hashtags invert-frequencies
-                                          retweet-statuses retweeted-users
-                                          faved-retweeted-users
-                                          timeline-endorsed-hashtags]]
+  (:require [suurvay.twitter-pure :as pure :refer [num-string? identifier->map
+                                                   get-hashtags timeline-hashtags
+                                                   timeline-hashtags invert-frequencies
+                                                   retweet-statuses retweeted-users
+                                                   faved-retweeted-users
+                                                   timeline-endorsed-hashtags]]
             [clojure.string :as s]
             [suurvay.schema :refer [Identifier UserMap Hashtag Status User]]
             [schema.core :as sc]
@@ -217,11 +217,9 @@
   "Given a user-id, user object, status object, or screen name, return
   the relevant user's ID."
   [identifier :- Identifier]
-  (or (and (integer? identifier) identifier)                  ;; ID
-      (get identifier :id)                                    ;; User or UserAbbrev
-      (get-in identifier [:user :id])                         ;; Status
+  (or (pure/get-id identifier)                                ;; ID, Status, or User object
       (and (string? identifier) (-> identifier get-user :id)) ;; screen name
-      (throw (IllegalArgumentException.
+      (throw (IllegalArgumentException.                       ;; WTF
               (str "get-id called with this: " identifier)))))
 
 (sc/defn get-profile :- User
