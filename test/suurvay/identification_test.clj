@@ -2,8 +2,9 @@
   (:require [clojure.test :refer :all]
             [schema.test :refer [validate-schemas]]
             [schema.core :as sc]
-            [suurvay.twitter-rest-test :refer [test-creds bind-creds-fixture]]
             [suurvay.schema :refer [Status]]
+            [suurvay.twitter-rest :as t]
+            [suurvay.twitter-rest-test :refer [test-creds bind-creds-fixture]]
             [suurvay.identification :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11,6 +12,10 @@
 (declare test-status)
 
 (use-fixtures :once (bind-creds-fixture test-creds) validate-schemas)
+
+(def twitter-creds
+  (binding [t/*creds* test-creds]
+    (twitter-api)))
 
 (def pure-test-map
   {:limit 10
@@ -23,17 +28,23 @@
 ;; Tests
 (deftest pure-test
   (testing "ID functions are called with available data, sparing API calls if possible"
-    (is (= 3 (score-user pure-test-map test-status))))
+    (is (= 3 (score-user twitter-creds pure-test-map test-status))))
 
   (testing "tests complete early if the limit is hit"
     (let [test-map (assoc pure-test-map :limit 1)]
-      (is (= 1 (score-user test-map test-status)))))
+      (is (= 1 (score-user twitter-creds test-map test-status)))))
 
   (testing "tests complete immediately if the output is ever negative"
     (let [test-map (assoc pure-test-map :profile (constantly -3))]
-      (is (= -1 (score-user test-map test-status))))))
+      (is (= -1 (score-user twitter-creds test-map test-status))))))
 
 (deftest with-api-test
+  (testing "score-user implicitly creates a TwitterAPI object when called with arity 2"
+    (let [test-map {:limit 1
+                    :friends #(do (is (sc/validate [sc/Int] %))
+                                  (is (pos? (count %)))
+                                  1)}]
+      (is (= 1 (score-user test-map "postpunkjustin")))))
   (testing "the :timeline, :friends, and :followers tests require API access"
     (let [api-tests {:timeline #(do (is (sc/validate [Status] %))
                                     (is (= 200 (count %))) 1)
@@ -42,7 +53,26 @@
                      :followers #(do (is (sc/validate [sc/Int] %))
                                      (is (pos? (count %))) 1)}
           complete-test-map (merge pure-test-map api-tests)]
-      (is (= 6 (score-user complete-test-map test-status))))))
+      (is (= 6 (score-user twitter-creds complete-test-map test-status))))))
+
+(def mock-twitter
+  (reify TwitterAPI
+    (before [this _] nil)
+    (get-name [this _] "Real Name")
+    (get-profile [this _] "This is my profile.")
+    (get-timeline-details [this _] [])
+    (get-friends [this _] [123 456 789])
+    (get-followers [this _] [987 654 321])))
+
+(deftest mocked-twitter-data-test
+  (testing "The protocol methods are called by the scoring functions"
+    (let [test-map {:limit 10
+                    :real-name #(if (= "Real-Name" %) 1 0)
+                    :get-profile #(if (= "This is my profile." %) 1 0)
+                    :timeline #(if (= [] %) 1 0)
+                    :friends #(if (= [123 456 789] %) 1 0)
+                    :followers #(if (= [987 654 321] %) 1 0)}]
+      (= 5 (score-user mock-twitter test-map {})))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example data
