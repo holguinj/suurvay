@@ -5,19 +5,37 @@
             [suurvay.twitter-rest :as t]
             [suurvay.schema :refer [Status User]]))
 
-(def test-order
+(defprotocol TwitterAPI
+  (get-name [this identifier] "Returns the 'real name' of the given identifier.")
+  (get-profile [this identifier] "Returns the profile text for the given identifier.")
+  (get-timeline-details [this identifier] "Returns the timeline with tweet details for the given identifier.")
+  (get-friends [this identifier] "Returns a vector of user IDs that the user identified is following.")
+  (get-followers [this identifier] "Returns a vector of user IDs following the identified user."))
+
+(defn twitter-api
+  "Returns a TwitterAPI object wrapping the given or bound credentials."
+  []
+  (reify TwitterAPI
+    (get-name [_ identifier] (t/get-name identifier))
+    (get-profile [_ identifier] (t/get-profile identifier))
+    (get-timeline-details [_ identifier] (t/get-timeline-details identifier))
+    (get-friends [_ identifier] (t/get-friends identifier))
+    (get-followers [_ identifier] (t/get-followers identifier))))
+
+(defn get-twitter-fns
   "The first element in each vector is a key to look up in the tests
   map. The second element is a function that will provide the
   raw data used to call the corresponding function in the tests map.
 
   For example, [:profile t/get-profile] will eventually expand to
   something like: `((:profile tests-map) (t/get-profile subject))`."
+  [api-object]
   [[:before      identity] ;; check whitelists, debug, etc.
-   [:real-name   t/get-name]
-   [:profile     t/get-profile]
-   [:timeline    t/get-timeline-details]
-   [:friends     t/get-friends]
-   [:followers   t/get-followers]])
+   [:real-name   (partial get-name api-object)]
+   [:profile     (partial get-profile api-object)]
+   [:timeline    (partial get-timeline-details api-object)]
+   [:friends     (partial get-friends api-object)]
+   [:followers   (partial get-followers api-object)]])
 
 (defn score-user
   "Takes a tests map of the following form:
@@ -39,16 +57,17 @@
   negative score will be returned.
 
   If you omit a key, that API endpoint will be skipped."
-  [{:keys [limit] :as tests} subject]
-  (loop [acc 0
-         rem-tests test-order]
-    (if (or (>= acc limit) (neg? acc) (empty? rem-tests))
-      acc
-      (let [[test-fn-key twitter-fn] (first rem-tests)
-            test-fn (get tests test-fn-key)
-            new-score (if-not test-fn 0 (-> subject twitter-fn test-fn))]
-        (recur (+ acc new-score)
-               (rest rem-tests))))))
+  ([test-map subject] (score-user (twitter-api) test-map subject))
+  ([api-object {:keys [limit] :as tests} subject]
+   (loop [acc 0
+          rem-tests (get-twitter-fns api-object)]
+     (if (or (>= acc limit) (neg? acc) (empty? rem-tests))
+       acc
+       (let [[test-fn-key twitter-fn] (first rem-tests)
+             test-fn (get tests test-fn-key)
+             new-score (if-not test-fn 0 (->> subject twitter-fn test-fn))]
+         (recur (+ acc new-score)
+                (rest rem-tests)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utility functions that should be useful when writing identification functions

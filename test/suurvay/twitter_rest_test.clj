@@ -107,7 +107,7 @@
   (testing "gets hashtags out of profiles and lower-cases them"
     (mocking [get-profile {:description "Hashtag #Twitter in the house. Hashtag #harassmentsucks."}]
       (let [hashtags (get-profile-hashtags "not a real account, output mocked")]
-        (is (= #{"#twitter" "#harassmentsucks"} hashtags)))))) 
+        (is (= #{"#twitter" "#harassmentsucks"} hashtags))))))
 
 (deftest ^:acceptance follow-test
   (testing "can get followers"
