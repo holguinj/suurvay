@@ -250,49 +250,48 @@
 (defalias MultiCreds
   (t/Atom1 (t/Vec TwitterToken)))
 
+(defalias Creds
+  (U MultiCreds TwitterToken))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-rest functions
-(ann ^:no-check suurvay.twitter-rest/*creds* (t/Option TwitterToken))
-
-(ann ^:no-check suurvay.twitter-rest/*multi-creds* (t/Option MultiCreds))
-
 (ann ^:no-check suurvay.twitter-rest/make-oauth-creds (IFn [Str Str -> TwitterAppToken]
                                                            [Str Str Str Str -> TwitterUserToken]))
 ;; ^^ this is technically foreign, but it is exposed in this ns
 
-(ann ^:no-check suurvay.twitter-rest/get-followers [Identifier -> (Vec Int)])
+(ann ^:no-check suurvay.twitter-rest/get-followers [Creds Identifier -> (Vec Int)])
 
-(ann ^:no-check suurvay.twitter-rest/get-friends [Identifier (U Keyword Any) * -> (Vec Int)])
+(ann ^:no-check suurvay.twitter-rest/get-friends [Creds Identifier (U Keyword Any) * -> (Vec Int)])
 
-(ann ^:no-check suurvay.twitter-rest/ids->names [(Seq Int) -> (Seq Str)])
+(ann ^:no-check suurvay.twitter-rest/ids->names [Creds (Seq Int) -> (Seq Str)])
 
-(ann ^:no-check suurvay.twitter-rest/names->ids [(Seq Str) -> (Seq Int)])
+(ann ^:no-check suurvay.twitter-rest/names->ids [Creds (Seq Str) -> (Seq Int)])
 
-(ann ^:no-check suurvay.twitter-rest/get-timeline-details [Identifier -> (Seq Status)])
+(ann ^:no-check suurvay.twitter-rest/get-timeline-details [Creds Identifier -> (Seq Status)])
 
-(ann ^:no-check suurvay.twitter-rest/get-timeline [Identifier -> (Seq Str)])
+(ann ^:no-check suurvay.twitter-rest/get-timeline [Creds Identifier -> (Seq Str)])
 
-(ann ^:no-check suurvay.twitter-rest/get-user-hashtags [Identifier -> (t/Set Str)])
+(ann ^:no-check suurvay.twitter-rest/get-user-hashtags [Creds Identifier -> (t/Set Str)])
 
-(ann ^:no-check suurvay.twitter-rest/get-users-hashtags [(Seq Identifier) -> (t/Map Int (Seq Str))])
+(ann ^:no-check suurvay.twitter-rest/get-users-hashtags [Creds (Seq Identifier) -> (t/Map Int (Seq Str))])
 
-(ann ^:no-check suurvay.twitter-rest/get-user [Identifier -> User])
+(ann ^:no-check suurvay.twitter-rest/get-user [Creds Identifier -> User])
 
-(ann ^:no-check suurvay.twitter-rest/get-id [Identifier -> Int])
+(ann ^:no-check suurvay.twitter-rest/get-id [Creds Identifier -> Int])
 
-(ann ^:no-check suurvay.twitter-rest/get-profile [Identifier -> User])
+(ann ^:no-check suurvay.twitter-rest/get-profile [Creds Identifier -> User])
 
-(ann ^:no-check suurvay.twitter-rest/get-profile-hashtags [Identifier -> (t/Set Str)])
+(ann ^:no-check suurvay.twitter-rest/get-profile-hashtags [Creds Identifier -> (t/Set Str)])
 
-(ann ^:no-check suurvay.twitter-rest/get-name [Identifier -> Str])
+(ann ^:no-check suurvay.twitter-rest/get-name [Creds Identifier -> Str])
 
-(ann ^:no-check suurvay.twitter-rest/get-blocks [-> (t/Set Str)])
+(ann ^:no-check suurvay.twitter-rest/get-blocks [Creds -> (t/Set Str)])
 
-(ann ^:no-check suurvay.twitter-rest/get-all-blocks [-> (Vec Int)])
+(ann ^:no-check suurvay.twitter-rest/get-all-blocks [Creds -> (Vec Int)])
 
-(ann ^:no-check suurvay.twitter-rest/block! [Identifier -> User])
+(ann ^:no-check suurvay.twitter-rest/block! [Creds Identifier -> (t/Val true)])
 
-(ann ^:no-check suurvay.twitter-rest/unblock! [Identifier -> User])
+(ann ^:no-check suurvay.twitter-rest/unblock! [Creds Identifier -> User])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; twitter-pure functions
@@ -328,18 +327,41 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; identification
+
+(defalias TwitterAPI suurvay.identification/TwitterAPI)
+
+(t/ann-protocol suurvay.identification/TwitterAPI
+                get-name             [TwitterAPI Identifier -> Str]
+                get-profile          [TwitterAPI Identifier -> User]
+                get-timeline-details [TwitterAPI Identifier -> (Seq Status)]
+                get-friends          [TwitterAPI Identifier -> (Seq Int)]
+                get-followers        [TwitterAPI Identifier -> (Seq Int)])
+
+(ann suurvay.identification/twitter-api [Creds -> TwitterAPI])
+
+;; TODO: this could have a much more rigorous signature
+(defalias TestOrder
+  (HVec [(HVec [(Val :before) (Val identity)])
+         (HVec [(Val :real-name) [Identifier -> Str]])
+         (HVec [(Val :profile) [Identifier -> User]])
+         (HVec [(Val :timeline) [Identifier -> (Seq Status)]])
+         (HVec [(Val :friends) [Identifier -> (Seq Int)]])
+         (HVec [(Val :followers) [Identifier -> (Seq Int)]])]))
+
+(ann ^:no-check suurvay.identification/get-twitter-fns [TwitterAPI -> TestOrder])
+
 (defalias TestMap
   (HMap :mandatory
         {:limit Number}
         :optional
-        {:before (Option [Identifier -> Number])
-         :real-name (Option [Str -> Number])
-         :profile (Option [User -> Number])
-         :timeline (Option [(Seq Status) -> Number])
-         :friends (Option [(Seq Int) -> Number])
-         :followers (Option [(Seq Int) -> Number])}))
+        {:before    [Identifier -> Number]
+         :real-name [Str -> Number]
+         :profile   [User -> Number]
+         :timeline  [(Seq Status) -> Number]
+         :friends   [(Seq Int) -> Number]
+         :followers [(Seq Int) -> Number]}))
 
-(ann ^:no-check suurvay.identification/score-user [TestMap Identifier -> Number])
+(ann ^:no-check suurvay.identification/score-user [TwitterAPI TestMap Identifier -> Number])
 
 (ann ^:no-check suurvay.identification/count-hits [(t/Seqable t/Any) (t/Seqable t/Any) -> t/Num])
 

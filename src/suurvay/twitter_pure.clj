@@ -30,7 +30,7 @@
 
     (string? x) ;; screen-name
     {:screen-name x}
-        
+
     (:id x) ;; User
     {:user-id (:id x)}))
 
