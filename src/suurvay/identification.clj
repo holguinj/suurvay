@@ -14,8 +14,9 @@
 
 (defn twitter-api
   "Returns a TwitterAPI object wrapping the given or bound credentials."
-  []
+  [creds]
   (reify TwitterAPI
+    ;; TODO update these to use try-with-creds or whatever
     (get-name [_ identifier] (t/get-name identifier))
     (get-profile [_ identifier] (t/get-profile identifier))
     (get-timeline-details [_ identifier] (t/get-timeline-details identifier))

@@ -4,18 +4,17 @@
             [schema.core :as sc]
             [suurvay.schema :refer [Status]]
             [suurvay.twitter-rest :as t]
-            [suurvay.twitter-rest-test :refer [test-creds bind-creds-fixture]]
+            [suurvay.twitter-rest-test :refer [test-creds]]
             [suurvay.identification :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup and data
 (declare test-status)
 
-(use-fixtures :once (bind-creds-fixture test-creds) validate-schemas)
+(use-fixtures :once validate-schemas)
 
 (def twitter-creds
-  (binding [t/*creds* test-creds]
-    (twitter-api)))
+  (twitter-api test-creds))
 
 (def pure-test-map
   {:limit 10
