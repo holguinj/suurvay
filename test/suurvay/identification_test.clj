@@ -4,18 +4,17 @@
             [schema.core :as sc]
             [suurvay.schema :refer [Status]]
             [suurvay.twitter-rest :as t]
-            [suurvay.twitter-rest-test :refer [test-creds bind-creds-fixture]]
+            [suurvay.twitter-rest-test :refer [test-creds]]
             [suurvay.identification :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup and data
 (declare test-status)
 
-(use-fixtures :once (bind-creds-fixture test-creds) validate-schemas)
+(use-fixtures :once validate-schemas)
 
 (def twitter-creds
-  (binding [t/*creds* test-creds]
-    (twitter-api)))
+  (twitter-api test-creds))
 
 (def pure-test-map
   {:limit 10
@@ -39,12 +38,6 @@
       (is (= -1 (score-user twitter-creds test-map test-status))))))
 
 (deftest with-api-test
-  (testing "score-user implicitly creates a TwitterAPI object when called with arity 2"
-    (let [test-map {:limit 1
-                    :friends #(do (is (sc/validate [sc/Int] %))
-                                  (is (pos? (count %)))
-                                  1)}]
-      (is (= 1 (score-user test-map "postpunkjustin")))))
   (testing "the :timeline, :friends, and :followers tests require API access"
     (let [api-tests {:timeline #(do (is (sc/validate [Status] %))
                                     (is (= 200 (count %))) 1)

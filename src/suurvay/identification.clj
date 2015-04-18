@@ -14,13 +14,13 @@
 
 (defn twitter-api
   "Returns a TwitterAPI object wrapping the given or bound credentials."
-  []
+  [creds]
   (reify TwitterAPI
-    (get-name [_ identifier] (t/get-name identifier))
-    (get-profile [_ identifier] (t/get-profile identifier))
-    (get-timeline-details [_ identifier] (t/get-timeline-details identifier))
-    (get-friends [_ identifier] (t/get-friends identifier))
-    (get-followers [_ identifier] (t/get-followers identifier))))
+    (get-name [_ identifier] (t/get-name creds identifier))
+    (get-profile [_ identifier] (t/get-profile creds identifier))
+    (get-timeline-details [_ identifier] (t/get-timeline-details creds identifier))
+    (get-friends [_ identifier] (t/get-friends creds identifier))
+    (get-followers [_ identifier] (t/get-followers creds identifier))))
 
 (defn get-twitter-fns
   "The first element in each vector is a key to look up in the tests
