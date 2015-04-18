@@ -1,4 +1,4 @@
-(defproject suurvay "0.1.0-SNAPSHOT"
+(defproject suurvay "0.2.0-SNAPSHOT"
   :description "A framework for building Twitter autoblocker bots."
   :url "https://github.com/holguinj/suurvay"
   :license {:name "Eclipse Public License"
