@@ -4,6 +4,7 @@
                                               IFn Int Keyword Map Num
                                               Option Seq Str U Val Vec
                                               ann defalias]]
+            [suurvay.identification :refer [TwitterAPI]]
             [clojure.core.typed.async :refer [Chan]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -328,9 +329,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; identification
 
-(defalias TwitterAPI suurvay.identification/TwitterAPI)
-
-(t/ann-protocol suurvay.identification/TwitterAPI
+(t/ann-protocol TwitterAPI
                 get-name             [TwitterAPI Identifier -> Str]
                 get-profile          [TwitterAPI Identifier -> User]
                 get-timeline-details [TwitterAPI Identifier -> (Seq Status)]
