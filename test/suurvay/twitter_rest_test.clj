@@ -221,7 +221,7 @@
 (def test-multi-creds
   (atom [test-creds app-only-test-creds]))
 
-(deftest ^:acceptance multi-creds-test
+(deftest ^:limit multi-creds-test
   (testing "switches to alternate creds when necessary"
     (println "About to try to pass Twitter's rate limit")
     (let [twenty-users (take 20 (get-followers test-multi-creds "twitterapi"))

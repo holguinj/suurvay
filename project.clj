@@ -3,6 +3,9 @@
   :url "https://github.com/holguinj/suurvay"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :test-selectors {:default (complement :limit)
+                   :limit :limit
+                   :all (constantly true)}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.typed "0.2.72"]
                  [environ "1.0.0"]
