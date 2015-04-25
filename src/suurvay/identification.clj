@@ -57,7 +57,6 @@
   negative score will be returned.
 
   If you omit a key, that API endpoint will be skipped."
-  ([test-map subject] (score-user (twitter-api) test-map subject))
   ([api-object {:keys [limit] :as tests} subject]
    (loop [acc 0
           rem-tests (get-twitter-fns api-object)]

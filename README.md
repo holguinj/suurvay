@@ -16,7 +16,8 @@ Running a bot involves a few steps:
 
 1. Construct a test map for use with `score-user`.
 2. Initialize a core.async channel with a stream of tweets.
-3. Start a loop to pass tweets from the channel to `score-user`, blocking users who pass a given threshold.
+3. Construct a TwitterAPI object.
+4. Start a loop to pass tweets from the channel to `score-user`, blocking users who pass a given threshold.
 
 ### Construct a Test Map
 
@@ -85,6 +86,19 @@ The above code doesn't have any visible effect, but if you take from `tweet-chan
 (pprint (<!! tweet-channel))
 ```
 
+### Construct a TwitterAPI object
+
+Suurvay supports a few ways of connecting to the Twitter API, some of which do extra work (like storing results in a database to review later). The way you choose the behavior you want is by constructing the appropriate TwitterAPI object. I'm working on adding new constructors (they aren't documented yet, sadly), so for now we'll just take a look at the simplest form:
+
+```clojure
+(require '[suurvay.identification :refer [twitter-api]])
+
+;; using the creds defined above
+(def api-obj (twitter-api creds))
+```
+
+This will be used as the first argument to the `score-user` function described below. If you want to poke around or create your own TwitterAPI constructor, have a look at the `suurvay.identification/TwitterAPI` protocol.
+
 ### Begin the Classification Loop
 
 Here's a basic test map that just prints the tweet body:
@@ -102,7 +116,7 @@ Now we have everything we need to start the main loop:
 ```clojure
 (while true
   (let [tweet (<!! tweet-channel)
-        score (score-user test-map tweet)]
+        score (score-user api-obj test-map tweet)]
     (when (< 1 score)
       (println "Blocking this jerk!")))) ;; don't just print it, do it.
 ```
@@ -123,7 +137,7 @@ Suur Vay is a minor character in Neal Stephenson's [Anathem](http://en.wikipedia
 
 ## License
 
-Copyright © 2014 Justin Holguin
+Copyright © 2015 Justin Holguin
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
