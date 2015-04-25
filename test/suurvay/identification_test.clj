@@ -2,7 +2,9 @@
   (:require [clojure.test :refer :all]
             [schema.test :refer [validate-schemas]]
             [schema.core :as sc]
-            [suurvay.schema :refer [Status]]
+            [suurvay.schema :refer [Status User]]
+            [suurvay.storage :as st]
+            [suurvay.storage.in-memory :refer [in-memory-only]]
             [suurvay.twitter-rest :as t]
             [suurvay.twitter-rest-test :refer [test-creds]]
             [suurvay.identification :refer :all]))
@@ -22,6 +24,14 @@
                 (is (= test-status %)) 1)
    :real-name #(do (is (= "Twitter API (mock)" %)) 1)
    :profile #(do (is (= (:user test-status) %)) 1)})
+
+(def validator-test-map
+  {:limit 10
+   :before #(do (is (sc/validate Status %)) 1)
+   :real-name #(do (is (sc/validate sc/Str %)) 1)
+   :profile #(do (is (sc/validate User %)) 1)
+   :timeline #(do (is (sc/validate [Status] %))
+                  (is (= 200 (count %))) 1)})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -65,6 +75,30 @@
                     :friends #(if (= [123 456 789] %) 1 0)
                     :followers #(if (= [987 654 321] %) 1 0)}]
       (= 5 (score-user mock-twitter test-map {})))))
+
+(deftest storage-backed-test
+  (testing "When given a storage-backed TwitterAPI object"
+    (let [stg (in-memory-only)
+          stg-api (twitter-api-with-storage test-creds stg)
+          timeline (t/get-timeline-details test-creds "postpunkjustin")
+          user (t/get-user test-creds "postpunkjustin")
+          ;; construct a suitably detailed status object. this is
+          ;; weird because we normally get status objects from the
+          ;; streaming API, where they come with a very detailed :user
+          ;; key. In this case, pulling the statuses from
+          ;; get-timeline-details is not sufficient and we have to add
+          ;; a full user object to the status like so:
+          status (assoc (first timeline) :user user)]
+
+      (testing "the inputs are still validated"
+        (is (= 4 (score-user stg-api validator-test-map status))))
+
+      (testing "the results are stored in the storage object"
+        (let [id (t/get-id test-creds status)
+              tweet-id (:id status)]
+          (is (sc/validate User (st/get-user stg id)))
+          (is (sc/validate Status (st/get-status stg tweet-id)))
+          (is (sc/validate [Status] (st/get-timeline stg id))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example data
