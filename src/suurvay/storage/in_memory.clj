@@ -46,13 +46,16 @@
           (vals (:statuses @storage))))
 
 (defn in-memory-only
-  []
-  (let [storage (atom {})]
-    (reify Storage
-      (store-user [_ user] (store-user* storage user))
-      (store-status [_ status] (store-status* storage status))
-      (store-timeline [_ timeline] (store-timeline* storage timeline))
+  ([] (in-memory-only (atom {})))
+  ([stg-atom]
+   {:pre [(instance? clojure.lang.Atom stg-atom)
+          (map? @stg-atom)]}
+   (let [storage stg-atom]
+     (reify Storage
+       (store-user [_ user] (store-user* storage user))
+       (store-status [_ status] (store-status* storage status))
+       (store-timeline [_ timeline] (store-timeline* storage timeline))
 
-      (get-user [_ id] (get-user* storage id))
-      (get-status [_ id] (get-status* storage id))
-      (get-timeline [_ id] (get-timeline* storage id)))))
+       (get-user [_ id] (get-user* storage id))
+       (get-status [_ id] (get-status* storage id))
+       (get-timeline [_ id] (get-timeline* storage id))))))
