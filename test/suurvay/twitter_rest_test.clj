@@ -231,8 +231,8 @@
           ;; so this is pretty weird code.
           friends-of-followers (promise)
           result-out (with-out-str (deliver friends-of-followers
-                                            (doseq [user twenty-users]
-                                              (get-friends test-multi-creds user))))]
+                                            (doall (for [user twenty-users]
+                                                     (get-friends test-multi-creds user)))))]
       (is (= 20 (count twenty-users)))
       (is (= 20 (count @friends-of-followers)))
       (is (every? (comp pos? count) @friends-of-followers))
