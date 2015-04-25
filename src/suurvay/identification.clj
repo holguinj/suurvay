@@ -3,7 +3,8 @@
   attempt to determine group membership."
   (:require [clojure.set :as set]
             [suurvay.twitter-rest :as t]
-            [suurvay.schema :refer [Status User]]))
+            [suurvay.schema :refer [Status User]]
+            [suurvay.storage :as st]))
 
 (defprotocol TwitterAPI
   (get-name [this identifier] "Returns the 'real name' of the given identifier.")
@@ -21,6 +22,32 @@
     (get-timeline-details [_ identifier] (t/get-timeline-details creds identifier))
     (get-friends [_ identifier] (t/get-friends creds identifier))
     (get-followers [_ identifier] (t/get-followers creds identifier))))
+
+(defn twitter-api-with-storage
+  "Closes over the given credentials and storage object. Stores
+  Twitter results in the storage object, but does not use it for
+  retrieval."
+  [creds storage]
+  (reify TwitterAPI
+    (get-name [_ identifier]
+      (t/get-name creds identifier))
+
+    (get-profile [_ identifier]
+      (let [user (t/get-profile creds identifier)]
+        (future (st/store-user storage user))
+        user))
+
+    (get-timeline-details [_ identifier]
+      (let [timeline (t/get-timeline-details creds identifier)]
+        (future (st/store-timeline storage timeline))
+        timeline))
+
+    ;; TODO: implement storage for these
+    (get-friends [_ identifier]
+      (t/get-friends creds identifier))
+
+    (get-followers [_ identifier]
+      (t/get-followers creds identifier))))
 
 (defn get-twitter-fns
   "The first element in each vector is a key to look up in the tests
