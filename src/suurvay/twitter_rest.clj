@@ -65,15 +65,13 @@
   [multi-creds twitter-fn & args]
   (let [twit #(apply twitter-fn :oauth-creds % args)
         creds (first @multi-creds)]
-    (try
-      (twit creds)
+    (try (twit creds)
       (catch Exception e
         (if-not (rate-limit? e)
           (throw e)
           (let [creds (first (swap! multi-creds rotate))]
             (println "Hit Twitter's rate limit! Retrying with alternate credentials.")
-            (try
-              (twit creds)
+            (try (twit creds)
               (catch Exception e
                 (if-not (rate-limit? e)
                   (throw e)
