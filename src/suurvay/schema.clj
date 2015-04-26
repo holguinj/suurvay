@@ -38,3 +38,34 @@
     {:user sc/Str}
     Status
     User))
+
+(defn user-creds?
+  [x]
+  (and (map? x)
+       (= #{:consumer :access-token :access-token-secret}
+          (-> x keys set))))
+
+(def AppCreds
+  {:bearer sc/Str})
+
+(def UserCreds
+  (sc/pred user-creds?))
+
+(def atom? (partial instance? clojure.lang.Atom))
+
+(defn app-creds?
+  [x]
+  (and (map? x)
+       (= '(:bearer) (keys x))
+       (every? string? (vals x))))
+
+(defn multi-creds?
+  [x]
+  (and (atom? x)
+       (vector? @x)
+       (every? #(or (user-creds? %)
+                    (app-creds? %))
+               @x)))
+
+(def MultiCreds
+  (sc/pred multi-creds?))
