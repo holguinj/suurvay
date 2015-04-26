@@ -1,0 +1,11 @@
+DROP FUNCTION IF EXISTS insert_user(json);
+--;;
+DROP FUNCTION IF EXISTS insert_statuses(json);
+--;;
+DROP FUNCTION IF EXISTS get_entity_id(jsonb);
+--;;
+DROP FUNCTION IF EXISTS get_entity_id(json);
+--;;
+DROP FUNCTION IF EXISTS get_status_user_id(jsonb);
+--;;
+DROP FUNCTION IF EXISTS get_status_user_id(json);
