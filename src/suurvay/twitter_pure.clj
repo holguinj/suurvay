@@ -3,7 +3,7 @@
   Twitter API. Credentials are read from the environment, so they
   should be provided either through your shell or using the
   lein-environ plugin."
-  (:require [clojure.string :as s] 
+  (:require [clojure.string :as s]
             [suurvay.schema :refer [Identifier Hashtag UserMap Status User]]
             [schema.core :as sc]
             [twitter.oauth :refer [make-oauth-creds]]
