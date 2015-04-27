@@ -26,6 +26,38 @@
                   (json/encode statuses)])
   nil)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Automatically create SQL arrays from vectors
+(extend-protocol clojure.java.jdbc/ISQLParameter
+  clojure.lang.IPersistentVector
+  (set-parameter [v ^java.sql.PreparedStatement stmt ^long i]
+    (let [conn (.getConnection stmt)
+          meta (.getParameterMetaData stmt)
+          type-name (.getParameterTypeName meta i)]
+      (if-let [elem-type (when (= (first type-name) \_) (apply str (rest type-name)))]
+        (.setObject stmt i (.createArrayOf conn elem-type (to-array v)))
+        (.setObject stmt i v)))))
+
+(extend-protocol clojure.java.jdbc/IResultSetReadColumn
+  java.sql.Array
+  (result-set-read-column [val _ _]
+    (into [] (.getArray val))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn add-followers!
+  [db id followers]
+  {:pre [(coll? followers)]}
+  (jdbc/query db ["select add_followers(?, ?::bigint[])"
+                  id, followers])
+  nil)
+
+(defn add-friends!
+  [db id friends]
+  {:pre [(coll? friends)]}
+  (jdbc/query db ["select add_friends(?, ?::bigint[])"
+                  id, friends])
+  nil)
+
 (defn insert-status!
   [db status]
   (insert-statuses! db [status]))
@@ -63,6 +95,24 @@
     (jdbc/query db)
     (map (comp pgobject->json :status))))
 
+(defn get-followers*
+  [db id]
+  (->> {:select [:id]
+        :from [:follows]
+        :where [:= :follows id]}
+    sql/format
+    (jdbc/query db)
+    (map :id)))
+
+(defn get-friends*
+  [db id]
+  (->> {:select [:follows]
+        :from [:follows]
+        :where [:= :id id]}
+    sql/format
+    (jdbc/query db)
+    (map :follows)))
+
 (defn pg-storage
   [db-spec]
   ;; TODO: validate db-spec here
@@ -70,7 +120,11 @@
     (store-user [_ user] (insert-user! db-spec user))
     (store-status [_ status] (insert-status! db-spec status))
     (store-timeline [_ timeline] (insert-statuses! db-spec timeline))
+    (store-followers [_ id followers] (add-followers! db-spec id followers))
+    (store-friends [_ id friends] (add-friends! db-spec id friends))
 
     (get-user [_ id] (get-user* db-spec id))
     (get-status [_ id] (get-status* db-spec id))
-    (get-timeline [_ id] (get-timeline* db-spec id))))
+    (get-timeline [_ id] (get-timeline* db-spec id))
+    (get-followers [_ id] (get-followers* db-spec id))
+    (get-friends [_ id] (get-friends* db-spec id))))
