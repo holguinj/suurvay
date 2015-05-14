@@ -5,6 +5,7 @@
             [suurvay.schema :refer [Status User]]
             [suurvay.storage :as st]
             [suurvay.storage.in-memory :refer [in-memory-only]]
+            [suurvay.twitter-api :refer :all]
             [suurvay.twitter-rest :as t]
             [suurvay.twitter-rest-test :refer [test-creds]]
             [suurvay.identification :refer :all]))

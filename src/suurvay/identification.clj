@@ -2,52 +2,7 @@
   "This namespace contains functions that evaluate an unknown user and
   attempt to determine group membership."
   (:require [clojure.set :as set]
-            [suurvay.twitter-rest :as t]
-            [suurvay.schema :refer [Status User]]
-            [suurvay.storage :as st]))
-
-(defprotocol TwitterAPI
-  (get-name [this identifier] "Returns the 'real name' of the given identifier.")
-  (get-profile [this identifier] "Returns the profile text for the given identifier.")
-  (get-timeline-details [this identifier] "Returns the timeline with tweet details for the given identifier.")
-  (get-friends [this identifier] "Returns a vector of user IDs that the user identified is following.")
-  (get-followers [this identifier] "Returns a vector of user IDs following the identified user."))
-
-(defn twitter-api
-  "Returns a TwitterAPI object wrapping the given or bound credentials."
-  [creds]
-  (reify TwitterAPI
-    (get-name [_ identifier] (t/get-name creds identifier))
-    (get-profile [_ identifier] (t/get-profile creds identifier))
-    (get-timeline-details [_ identifier] (t/get-timeline-details creds identifier))
-    (get-friends [_ identifier] (t/get-friends creds identifier))
-    (get-followers [_ identifier] (t/get-followers creds identifier))))
-
-(defn twitter-api-with-storage
-  "Closes over the given credentials and storage object. Stores
-  Twitter results in the storage object, but does not use it for
-  retrieval."
-  [creds storage]
-  (reify TwitterAPI
-    (get-name [_ identifier]
-      (t/get-name creds identifier))
-
-    (get-profile [_ identifier]
-      (let [user (t/get-profile creds identifier)]
-        (future (st/store-user storage user))
-        user))
-
-    (get-timeline-details [_ identifier]
-      (let [timeline (t/get-timeline-details creds identifier)]
-        (future (st/store-timeline storage timeline))
-        timeline))
-
-    ;; TODO: implement storage for these
-    (get-friends [_ identifier]
-      (t/get-friends creds identifier))
-
-    (get-followers [_ identifier]
-      (t/get-followers creds identifier))))
+            [suurvay.twitter-api :as tw]))
 
 (defn get-twitter-fns
   "The first element in each vector is a key to look up in the tests
@@ -58,11 +13,11 @@
   something like: `((:profile tests-map) (t/get-profile subject))`."
   [api-object]
   [[:before      identity] ;; check whitelists, debug, etc.
-   [:real-name   (partial get-name api-object)]
-   [:profile     (partial get-profile api-object)]
-   [:timeline    (partial get-timeline-details api-object)]
-   [:friends     (partial get-friends api-object)]
-   [:followers   (partial get-followers api-object)]])
+   [:real-name   (partial tw/get-name api-object)]
+   [:profile     (partial tw/get-profile api-object)]
+   [:timeline    (partial tw/get-timeline-details api-object)]
+   [:friends     (partial tw/get-friends api-object)]
+   [:followers   (partial tw/get-followers api-object)]])
 
 (defn score-user
   "Takes a tests map of the following form:

@@ -11,16 +11,14 @@
   (swap! storage
          (fn [stg]
            (update-in stg [:users]
-                      assoc id user)))
-  nil)
+                      assoc id user))))
 
 (defn store-status*
   [storage {:keys [id] :as status}]
   (swap! storage
          (fn [stg]
            (update-in stg [:statuses]
-                      assoc id status)))
-  nil)
+                      assoc id status))))
 
 (defn store-timeline*
   [storage statuses]
@@ -30,8 +28,7 @@
     (swap! storage
            (fn [stg]
              (update-in stg [:statuses]
-                        merge new-statuses))))
-  nil)
+                        merge new-statuses)))))
 
 (defn store-followers*
   [storage id followers]
@@ -40,8 +37,7 @@
     (swap! storage
            (fn [stg]
              (update-in stg [:follows]
-                        into new-follows))))
-  nil)
+                        into new-follows)))))
 
 (defn store-friends*
   [storage id friends]
@@ -50,8 +46,7 @@
     (swap! storage
            (fn [stg]
              (update-in stg [:follows]
-                        into new-follows))))
-  nil)
+                        into new-follows)))))
 
 (defn get-user*
   [storage id]
@@ -78,6 +73,8 @@
     (filter (fn [[user follows]] (= id user)))
     (map second)))
 
+(def ->nil (constantly nil))
+
 (defn in-memory-only
   ([] (in-memory-only (atom blank-storage-map)))
   ([stg-atom]
@@ -85,11 +82,11 @@
           (map? @stg-atom)]}
    (let [storage stg-atom]
      (reify Storage
-       (store-user [_ user] (store-user* storage user))
-       (store-status [_ status] (store-status* storage status))
-       (store-timeline [_ timeline] (store-timeline* storage timeline))
-       (store-followers [_ id followers] (store-followers* storage id followers))
-       (store-friends [_ id friends] (store-friends* storage id friends))
+       (store-user [_ user] (->nil (store-user* storage user)))
+       (store-status [_ status] (->nil (store-status* storage status)))
+       (store-timeline [_ timeline] (->nil (store-timeline* storage timeline)))
+       (store-followers [_ id followers] (->nil (store-followers* storage id followers)))
+       (store-friends [_ id friends] (->nil (store-friends* storage id friends)))
 
        (get-user [_ id] (get-user* storage id))
        (get-status [_ id] (get-status* storage id))

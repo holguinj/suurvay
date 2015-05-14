@@ -4,7 +4,7 @@
                                               IFn Int Keyword Map Num
                                               Option Seq Str U Val Vec
                                               ann defalias]]
-            [suurvay.identification :refer [TwitterAPI]]
+            [suurvay.twitter-api :refer [TwitterAPI]]
             [clojure.core.typed.async :refer [Chan]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -336,7 +336,7 @@
                 get-friends          [TwitterAPI Identifier -> (Seq Int)]
                 get-followers        [TwitterAPI Identifier -> (Seq Int)])
 
-(ann suurvay.identification/twitter-api [Creds -> TwitterAPI])
+(ann suurvay.twitter-api/twitter-api [Creds -> TwitterAPI])
 
 ;; TODO: this could have a much more rigorous signature
 (defalias TestOrder

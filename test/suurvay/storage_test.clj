@@ -1,8 +1,7 @@
 (ns suurvay.storage-test
   (:require [suurvay.storage.in-memory :refer :all]
             [suurvay.storage :refer :all]
-            [suurvay.storage.postgres :refer [pg-storage]
-             :as pg]
+            [suurvay.storage.postgres :refer [pg-storage] :as pg]
             [suurvay.twitter-rest-test :refer [test-creds]]
             [suurvay.twitter-rest :as tw]
             [clojure.java.jdbc :as jdbc]

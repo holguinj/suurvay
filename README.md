@@ -91,13 +91,13 @@ The above code doesn't have any visible effect, but if you take from `tweet-chan
 Suurvay supports a few ways of connecting to the Twitter API, some of which do extra work (like storing results in a database to review later). The way you choose the behavior you want is by constructing the appropriate TwitterAPI object. I'm working on adding new constructors (they aren't documented yet, sadly), so for now we'll just take a look at the simplest form:
 
 ```clojure
-(require '[suurvay.identification :refer [twitter-api]])
+(require '[suurvay.twitter-api :refer [twitter-api]])
 
 ;; using the creds defined above
 (def api-obj (twitter-api creds))
 ```
 
-This will be used as the first argument to the `score-user` function described below. If you want to poke around or create your own TwitterAPI constructor, have a look at the `suurvay.identification/TwitterAPI` protocol.
+This will be used as the first argument to the `score-user` function described below. If you want to poke around or create your own TwitterAPI constructor, have a look at the `suurvay.twitter-api/TwitterAPI` protocol.
 
 ### Begin the Classification Loop
 
@@ -125,6 +125,10 @@ Now we have everything we need to start the main loop:
 
 ### Namespaces
 * `suurvay.identification`: contains the `score-user` function that does most of the hard work of this library, along with a few pure helper functions for constructing generic rules.
+* `suurvay.storage`: contains the `Storage` protocol.
+* `suurvay.storage.in-memory`: contains the in-memory implementation of `Storage`.
+* `suurvay.storage.postgres`: contains the Postgres implementation of `Storage`.
+* `suurvay.twitter-api`: contains the `TwitterAPI` protocol and its implementations.
 * `suurvay.streaming-twitter`: contains the `filter-stream` function, which opens a Twitter search stream and places the results onto a core.async channel that the caller supplies.
 * `suurvay.training`: contains functions that make heavy use of the Twitter REST API to gather information about groups of Twitter users, including popular hashtags and profile sentiments (pro-X, anti-Y, etc.).
 * `suurvay.twitter-pure`: contains pure functions and predicates that are useful when processing data during identification.

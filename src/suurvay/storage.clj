@@ -15,4 +15,3 @@
   (get-timeline [this id] "Retrieves all available statuses for the specified user.")
   (get-followers [this id] "Retrieves the users who follow the given user.")
   (get-friends [this id] "Retrieves the users that the given user is following."))
-
